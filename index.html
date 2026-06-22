@@ -1,0 +1,2711 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZBS Sandbox Studio — Tạo & Kiểm duyệt mẫu tin ZNS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    fontFamily: { sans: ['Inter','sans-serif'], mono: ['JetBrains Mono','monospace'] }
+  }}};
+</script>
+<style>
+  body { font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif; background:#f1f5f9; }
+  .mono, .font-mono { font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace; }
+  .zbs-blue { color:#0068FF; } .bg-zbs { background-color:#0068FF; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  .animate-fade-in { animation:fadeIn .45s ease both; }
+  ::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;} ::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+  .phone-shell{border-radius:42px;background:#0a0a0a;padding:10px;box-shadow:0 30px 60px -15px rgba(15,23,42,.35),0 0 0 2px rgba(15,23,42,.06);}
+  .phone-notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:104px;height:22px;background:#0a0a0a;border-radius:0 0 14px 14px;z-index:30;}
+  .zalo-screen{border-radius:32px;overflow:hidden;background:#eef2f6;height:620px;display:flex;flex-direction:column;}
+  .zalo-scroll{overflow-y:auto;scrollbar-width:thin;}
+  .field-flagged{border-color:#f43f5e !important;box-shadow:0 0 0 3px rgba(244,63,94,.12) !important;background-color:#fff1f2 !important;}
+  .cc{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:10px;line-height:1;font-weight:700;color:#cbd5e1;font-family:'JetBrains Mono',ui-monospace,monospace;pointer-events:none;white-space:nowrap;}
+  .cc-over{color:#f43f5e;}
+  .cc-wrap{min-width:0;}
+  .tab-trigger{transition:all .2s ease;position:relative;}
+  .tab-active{background:#0068FF;border-color:#0068FF;box-shadow:0 6px 16px -6px rgba(0,104,255,.50);}
+  .tab-active div{color:#fff !important;}
+  .tab-idle{background:transparent;border-color:transparent;}
+  .step-dot-done{background:#0068FF;color:#fff;} .step-dot-active{background:#0068FF;color:#fff;box-shadow:0 0 0 4px rgba(0,104,255,.15);}
+  .step-dot-idle{background:#e2e8f0;color:#94a3b8;}
+  [data-modal]{transition:opacity .22s ease;} [data-modal-card]{transition:opacity .22s ease,transform .22s ease;}
+  .spin{animation:spin 1s linear infinite;} @keyframes spin{to{transform:rotate(360deg);}}
+  .pulse-ring{animation:pulsering 1.6s ease-out infinite;} @keyframes pulsering{0%{transform:scale(.9);opacity:.7;}70%{transform:scale(1.25);opacity:0;}100%{opacity:0;}}
+</style>
+</head>
+<body class="min-h-screen text-slate-900">
+
+<div class="max-w-[1400px] mx-auto px-5 py-6">
+
+  <!-- ============ HEADER ============ -->
+  <header class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3.5">
+      <div class="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center shadow-lg shadow-blue-500/10 shrink-0">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/3840px-Icon_of_Zalo.svg.png" alt="Zalo" class="w-7 h-7 object-contain">
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg font-extrabold tracking-tight">ZBS Sandbox Studio</h1>
+          <span class="text-[10px] font-extrabold zbs-blue bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100">v3.0</span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium">Tạo và kiểm duyệt mẫu tin nhắn ZNS tự động</p>
+      </div>
+    </div>
+
+    <!-- Step rail -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="flex items-center gap-2">
+        <div id="step-dot-1" class="step-dot-active w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold transition-all">1</div>
+        <span id="step-label-1" class="text-xs font-bold text-slate-900 hidden sm:inline">Soạn mẫu</span>
+      </div>
+      <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      <div class="flex items-center gap-2">
+        <div id="step-dot-2" class="step-dot-idle w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold transition-all">2</div>
+        <span id="step-label-2" class="text-xs font-bold text-slate-400 hidden sm:inline">Kiểm duyệt AI</span>
+      </div>
+      <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      <div class="flex items-center gap-2">
+        <div id="step-dot-3" class="step-dot-idle w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold transition-all">3</div>
+        <span id="step-label-3" class="text-xs font-bold text-slate-400 hidden sm:inline">Hoàn tất</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ SCENARIOS ============ -->
+  <section class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 mb-6 animate-fade-in">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2.5">
+        <span class="text-base font-extrabold text-slate-900">Các case Template mẫu</span>
+        
+      </div>
+      <span class="text-[11px] text-slate-400 font-medium mono hidden md:inline">Bấm một thẻ để điền dữ liệu</span>
+    </div>
+    <div id="scenarios-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+      <!-- scenario cards injected by JS -->
+    </div>
+  </section>
+
+  <!-- ============ MAIN GRID: builder | preview ============ -->
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-6 items-start">
+
+    <!-- ====== LEFT: BUILDER ====== -->
+    <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in" style="animation-delay:80ms;">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-extrabold">A</div>
+          <div>
+            <h2 class="text-sm font-extrabold tracking-tight">Trình tạo mẫu tin</h2>
+            <p class="text-[11px] text-slate-400 font-medium">Khớp với hướng dẫn kiểm duyệt ZBS 2026</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2"><button id="btn-new-template" type="button" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#0068FF] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition active:scale-95"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/></svg>Tạo mới Template</button><span class="text-[11px] text-slate-400 font-bold bg-slate-100 px-2.5 py-1 rounded-lg hidden sm:inline" id="json-sync-badge">JSON tự cập nhật</span></div>
+      </div>
+
+      <!-- TAB BAR -->
+      <div class="px-5 pt-4">
+        <div class="grid grid-cols-3 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+          <button data-tab="1" class="tab-trigger tab-active border rounded-xl px-3 py-2.5 text-left transition-all cursor-pointer">
+            <div class="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">Thông tin template</div>
+            <div class="text-[10px] text-slate-400 font-medium mt-0.5">Loại mẫu · tag · logo</div>
+          </button>
+          <button data-tab="2" class="tab-trigger tab-idle border rounded-xl px-3 py-2.5 text-left transition-all cursor-pointer">
+            <div class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5">Nội dung tin nhắn <span id="tab2-dot" class="w-1.5 h-1.5 rounded-full bg-blue-400 hidden"></span></div>
+            <div class="text-[10px] text-slate-400 font-medium mt-0.5">Thân mẫu & bảng</div>
+          </button>
+          <button data-tab="3" class="tab-trigger tab-idle border rounded-xl px-3 py-2.5 text-left transition-all cursor-pointer">
+            <div class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5">CTA & Gửi template</div>
+            <div class="text-[10px] text-slate-400 font-medium mt-0.5">CTA & gửi ZBS</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB PANELS -->
+      <div class="p-5">
+
+        <!-- ===== TAB 1: Thông tin template ===== -->
+        <div data-panel="1" class="flex flex-col gap-6">
+
+          <!-- OA ID -->
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Mã định danh trang doanh nghiệp (OA ID)</label>
+            <div class="relative">
+              <input id="f-oaid" type="text" inputmode="numeric" maxlength="20" value=""
+                class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 focus:bg-white transition pr-14"
+                placeholder="Nhập OA ID dạng số...">
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-slate-400 bg-white border border-slate-200 rounded-lg px-2 py-1">ID</span>
+            </div>
+            <p id="f-oaid-hint" class="text-[11px] text-slate-400 font-medium mt-1.5 hidden">OA ID phải là chuỗi số.</p>
+          </div>
+
+          <!-- Template type -->
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Chọn loại mẫu nội dung</label>
+            <div id="f-type-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              <!-- type chips injected -->
+            </div>
+          </div>
+
+          <!-- Tag level (NGOÀI JSON) -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Mục đích gửi tin (Tag)</label>
+              <span class="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">Không lưu trong JSON</span>
+            </div>
+            <div id="f-tag-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <!-- tag chips injected -->
+            </div>
+          </div>
+
+          <!-- Logo / map_image (mutually exclusive) -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Hình ảnh đầu mẫu</label>
+              <div id="f-media-toggle" class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
+                <button data-media="oa_info" class="media-toggle px-2.5 py-1 rounded-lg transition-all bg-white text-slate-900 shadow-sm">Logo OA</button>
+                <button data-media="map_image" class="media-toggle px-2.5 py-1 rounded-lg transition-all text-slate-500">Ảnh slider</button>
+              </div>
+            </div>
+
+            <!-- oa_info block -->
+            <div id="block-oa-info" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <span class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Logo (Light mode)</span>
+                <input id="f-logo-light" type="text" maxlength="200" value=""
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition"
+                  placeholder="https://...">
+              </div>
+              <div>
+                <span class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Logo (Dark mode)</span>
+                <input id="f-logo-dark" type="text" maxlength="200"
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition"
+                  placeholder="Không bắt buộc...">
+              </div>
+            </div>
+
+            <!-- map_image block (hidden by default) -->
+            <div id="block-map-image" class="hidden">
+              <span class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Đường dẫn ảnh slider (chỉ mẫu Tuỳ chỉnh)</span>
+              <input id="f-map-image" type="text" maxlength="200"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition"
+                placeholder="https://... (ảnh banner trượt)">
+              
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button data-next="2" class="next-btn inline-flex items-center gap-2 bg-zbs text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-sm hover:bg-[#0057d9] transition active:scale-95">
+              Tiếp tục: Nội dung
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== TAB 2: Nội dung ===== -->
+        <div data-panel="2" class="hidden flex-col gap-6">
+          <!-- Title -->
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Tiêu đề mẫu tin <span class="text-rose-500">*</span></label>
+            <input id="f-title" type="text" maxlength="100" value=""
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 focus:bg-white transition"
+              placeholder="VD: Thông báo trạng thái đơn hàng">
+          </div>
+
+          <!-- Body -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Văn bản mô tả chính <span class="text-rose-500">*</span></label>
+              <span id="f-body-count" class="text-[10px] font-bold text-slate-400 mono bg-slate-100 px-2 py-0.5 rounded-md">0/400 ký tự</span>
+            </div>
+            <textarea id="f-body" rows="4" maxlength="400" wrap="soft"
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-medium text-slate-800 leading-relaxed outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 focus:bg-white transition resize-none"
+              placeholder="Xin trân trọng cảm ơn Quý khách <customer_name>..."></textarea>
+            <p class="text-[11px] text-slate-400 font-medium mt-1.5">Chèn biến cá nhân hoá dạng <span class="mono zbs-blue font-bold">&lt;ten_bien&gt;</span> để hệ thống nhận diện tham số.</p>
+          </div>
+
+          <!-- map_info table -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Bảng thông tin (map_info)</label>
+                <p class="text-[11px] text-slate-400 font-medium">Cặp nhãn — giá trị hiển thị dưới thân tin</p>
+              </div>
+              <button id="btn-add-row" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold zbs-blue bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                Thêm hàng
+              </button>
+            </div>
+            <div id="map-rows" class="flex flex-col gap-2.5">
+              <!-- rows injected -->
+            </div>
+          </div>
+
+          <!-- open_utility (voucher / payment) -->
+          <div id="block-open-utility" class="hidden rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <svg class="w-4 h-4 zbs-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span id="ou-title" class="text-xs font-extrabold text-slate-800">Chi tiết ưu đãi</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <span id="ou-label-1" class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Giá trị ưu đãi</span>
+                <input id="f-ou-1" type="text" maxlength="100"
+                  class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
+                  placeholder="VD: GIẢM 50.000đ">
+              </div>
+              <div>
+                <span id="ou-label-2" class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Mã / hạn dùng</span>
+                <input id="f-ou-2" type="text" maxlength="90"
+                  class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
+                  placeholder="VD: CODESIEUCONG">
+              </div>
+            </div>
+          </div>
+
+          <!-- rating note -->
+          <div id="block-rating" class="hidden rounded-2xl border border-amber-100 bg-amber-50/50 p-4 flex items-center gap-3">
+            <div class="flex gap-0.5">
+              <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+              <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+              <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+              <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+              <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+            </div>
+            <p class="text-[11px] text-slate-600 font-medium">Mẫu đánh giá tự gắn khối 5 sao bấm chọn — không cần nhập thêm.</p>
+          </div>
+
+          <div class="flex justify-between">
+            <button data-back="1" class="back-btn inline-flex items-center gap-2 text-slate-500 text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-slate-100 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+              Quay lại
+            </button>
+            <button data-next="3" class="next-btn inline-flex items-center gap-2 bg-zbs text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-sm hover:bg-[#0057d9] transition active:scale-95">
+              Tiếp tục: Nút & nộp
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== TAB 3: CTA & nộp ===== -->
+        <div data-panel="3" class="hidden flex-col gap-6">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Nút thao tác (CTA)</label>
+                <p class="text-[11px] text-slate-400 font-medium">Tối đa 3 nút · link & SĐT bắt buộc đặt ở đây</p>
+              </div>
+              <button id="btn-add-cta" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold zbs-blue bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                Thêm nút
+              </button>
+            </div>
+            <div id="cta-list" class="flex flex-col gap-3">
+              <!-- cta cards injected -->
+            </div>
+          </div>
+
+          <!-- agree -->
+          <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 cursor-pointer hover:border-blue-200 transition">
+            <input id="f-agree" type="checkbox" class="mt-0.5 w-4 h-4 accent-[#0068FF] cursor-pointer shrink-0">
+            <span class="text-[12px] text-slate-600 font-medium leading-relaxed">Tôi cam kết thông tin đã khai báo là chính xác và chịu trách nhiệm tuân thủ các Quy định kiểm duyệt của Zalo Business Solutions (ZBS).</span>
+          </label>
+
+          <button id="btn-submit" disabled
+            class="w-full inline-flex items-center justify-center gap-2.5 bg-slate-900 text-white text-sm font-extrabold py-4 rounded-2xl shadow-lg transition active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:bg-slate-800 enabled:cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Bắt đầu kiểm duyệt thông minh & Nộp ZBS
+          </button>
+          <p id="submit-hint" class="text-[11px] text-center text-slate-400 font-medium -mt-3">Tích vào ô cam kết để mở nút nộp.</p>
+
+          <div class="flex justify-start">
+            <button data-back="2" class="back-btn inline-flex items-center gap-2 text-slate-500 text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-slate-100 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+              Quay lại
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====== RIGHT: PHONE PREVIEW ====== -->
+    <div class="lg:sticky lg:top-6 flex flex-col gap-4 animate-fade-in" style="animation-delay:160ms;">
+      <div class="flex items-center gap-2 px-1">
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Xem trước trên Zalo</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-400 ml-auto"></span>
+      </div>
+
+      <div class="phone-shell relative mx-auto" style="width:300px;">
+        <div class="phone-notch"></div>
+        <div class="zalo-screen">
+          <!-- Zalo OA chat header -->
+          <div class="bg-zbs px-4 pt-9 pb-3 flex items-center gap-2.5 shrink-0">
+            <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-sm">Z</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-white font-extrabold text-[13px] leading-tight truncate">Zalo Business Solutions</div>
+              <div class="text-white/70 text-[10px] font-medium">Doanh nghiệp phản hồi tự động</div>
+            </div>
+            <span class="text-[9px] font-bold text-white/80 border border-white/30 rounded px-1.5 py-0.5">LTE</span>
+          </div>
+          <!-- chat scroll -->
+          <div class="zalo-scroll flex-1 px-3 py-4 bg-[#eef2f6]">
+            <div class="text-center text-[10px] text-slate-400 font-semibold mb-3" id="prev-time">Hôm nay, 10:35</div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <!-- message card body rendered by JS -->
+              <div id="prev-card" class="p-3.5"></div>
+            </div>
+          </div>
+          <!-- chat input -->
+          <div class="bg-white border-t border-slate-100 px-3 py-2.5 flex items-center gap-2 shrink-0">
+            <div class="flex-1 bg-slate-100 rounded-full px-3 py-1.5 text-[11px] text-slate-400">Nhập câu trả lời...</div>
+            <div class="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center"><svg class="w-3.5 h-3.5 zbs-blue" fill="currentColor" viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-6 animate-fade-in">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#0068FF] flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-extrabold tracking-tight">Mẫu đã gửi duyệt</h3>
+          <p class="text-[11px] text-slate-400 font-medium">Bấm vào một mẫu để xem trạng thái hoặc thu hồi &amp; chỉnh sửa lại.</p>
+        </div>
+      </div>
+      <span id="submissions-count" class="text-[11px] zbs-blue font-bold bg-blue-50 px-2.5 py-1 rounded-lg">0 mẫu</span>
+    </div>
+    <div class="p-5">
+      <div id="submissions-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+    </div>
+  </section>
+
+  <!-- ============ LIVE JSON PANEL ============ -->
+  <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-6 animate-fade-in" style="animation-delay:220ms;">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 zbs-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        <div>
+          <h3 class="text-sm font-extrabold tracking-tight">Tự động chuyển sang JSON</h3>
+          <p class="text-[11px] text-slate-400 font-medium">JSON này được sinh ở backend khi bạn nhập thông tin — hiển thị ở đây chỉ để kiểm tra logic; ở bản chạy thật mục này sẽ được ẩn.</p>
+        </div>
+      </div>
+      <button id="btn-copy-json" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition active:scale-95">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <span id="copy-json-label">Sao chép</span>
+      </button>
+    </div>
+    <div class="bg-slate-950 p-5 overflow-auto max-h-[360px]">
+      <pre id="json-output" class="mono text-[11px] leading-relaxed text-slate-200 whitespace-pre"></pre>
+    </div>
+  </section>
+
+  <footer class="mt-8 mb-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-medium px-1">
+    <span>© 2026 ZBS Product Suite • Thiết kế bởi Nguyễn Hoàng Minh.</span>
+    <span class="mono">0765828191 • hwinh.work@gmail.com</span>
+  </footer>
+</div>
+
+
+
+<!-- ============ MODAL: AI reviewing ============ -->
+<div id="modal-reviewing" data-modal class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+  <div data-modal-card class="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center opacity-0 scale-95">
+    <div class="relative w-20 h-20 mx-auto mb-5">
+      <span class="absolute inset-0 rounded-full bg-blue-100 pulse-ring"></span>
+      <div class="relative w-20 h-20 rounded-3xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+        <svg class="w-9 h-9 zbs-blue spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </div>
+    </div>
+    <h3 class="text-lg font-extrabold tracking-tight mb-2">AI đang kiểm duyệt...</h3>
+    <p class="text-xs text-slate-500 font-medium leading-relaxed">Trợ lý ZBS đối soát mẫu với bộ quy định cứng và kiểm định ngữ nghĩa. Vui lòng đợi trong giây lát...</p>
+  </div>
+</div>
+
+<!-- ============ MODAL: results (violations) ============ -->
+<div id="modal-results" data-modal class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" id="results-backdrop"></div>
+  <div data-modal-card class="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden opacity-0 scale-95 max-h-[88vh] flex flex-col">
+    <div id="results-head" class="px-6 py-5 shrink-0">
+      <div class="flex items-center gap-3">
+        <div id="results-icon" class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"></div>
+        <div>
+          <h3 id="results-title" class="text-base font-extrabold tracking-tight"></h3>
+          <p id="results-sub" class="text-[11px] font-medium opacity-90"></p>
+        </div>
+      </div>
+    </div>
+    <div class="px-6 pb-2 overflow-y-auto zalo-scroll flex-1">
+      <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3">Chi tiết kết quả kiểm duyệt</div>
+      <div id="results-list" class="flex flex-col gap-3 pb-2"></div>
+      <div id="results-warn-note" class="hidden mt-3 mb-2 text-[11px] text-rose-600 font-medium bg-rose-50 border border-rose-100 rounded-xl p-3 leading-relaxed"></div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex gap-2.5 shrink-0">
+      <button id="btn-results-back" class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl text-xs font-extrabold text-slate-700 bg-slate-100 hover:bg-slate-200 transition active:scale-[0.98]">
+        Quay về chỉnh sửa
+      </button>
+      <button id="btn-results-continue" class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl text-xs font-extrabold text-white bg-zbs hover:bg-[#0057d9] transition active:scale-[0.98]">
+        Tiếp tục gửi ZBS
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: success ============ -->
+<div id="modal-success" data-modal class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+  <div data-modal-card class="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center opacity-0 scale-95">
+    <div class="w-20 h-20 mx-auto mb-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+      <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h3 class="text-lg font-extrabold tracking-tight mb-2">Gửi duyệt thành công!</h3>
+    <p class="text-xs text-slate-500 font-medium leading-relaxed mb-6">Mẫu tin đã được dịch sang JSON chuẩn ZBS và chuyển tới hàng đợi kiểm định cuối cùng của chuyên viên ZNS.</p>
+    <button id="btn-success-review" class="w-full bg-zbs text-white text-sm font-extrabold py-3.5 rounded-2xl shadow-sm hover:bg-[#0057d9] transition active:scale-[0.99] mb-2.5 inline-flex items-center justify-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      Xem lại mẫu đã gửi duyệt
+    </button>
+    <button id="btn-success-reset" class="w-full bg-slate-100 text-slate-600 text-sm font-bold py-3 rounded-2xl hover:bg-slate-200 transition active:scale-[0.99]">
+      Tạo mẫu khác
+    </button>
+  </div>
+</div>
+
+
+
+<!-- MODAL: đã gửi thành công (mẫu không cảnh báo) -->
+<div id="modal-sent" data-modal class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" id="sent-backdrop"></div>
+  <div data-modal-card class="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center opacity-0 scale-95">
+    <div class="w-20 h-20 mx-auto mb-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+      <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h3 class="text-lg font-extrabold tracking-tight mb-2">Gửi kiểm duyệt thành công!</h3>
+    <p class="text-xs text-slate-500 font-medium leading-relaxed mb-6">Template của bạn đã được gửi tới bộ phận CTV kiểm duyệt thành công. Vui lòng chờ kết quả phê duyệt.</p>
+    <button id="btn-sent-ok" class="w-full bg-zbs text-white text-sm font-extrabold py-3.5 rounded-2xl hover:bg-[#0057d9] transition active:scale-[0.99]">Đã hiểu</button>
+  </div>
+</div>
+
+<!-- MODAL: mẫu có cảnh báo (2 lựa chọn) -->
+<div id="modal-recall" data-modal class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" id="recall-backdrop"></div>
+  <div data-modal-card class="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-7 opacity-0 scale-95">
+    <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center">
+      <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <h3 class="text-base font-extrabold tracking-tight text-center mb-2">Mẫu tin đang có cảnh báo</h3>
+    <p class="text-xs text-slate-500 font-medium leading-relaxed text-center mb-6">Mẫu này đã được gửi nhưng vẫn còn điểm cần lưu ý. Bạn muốn quay về hay thu hồi để chỉnh sửa lại?</p>
+    <div class="flex flex-col gap-2.5">
+      <button id="btn-recall-edit" class="w-full inline-flex items-center justify-center gap-2 bg-zbs text-white text-sm font-extrabold py-3 rounded-2xl hover:bg-[#0057d9] transition active:scale-[0.99]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Thu hồi &amp; chỉnh sửa lại
+      </button>
+      <button id="btn-recall-back" class="w-full bg-slate-100 text-slate-600 text-sm font-bold py-3 rounded-2xl hover:bg-slate-200 transition">Quay về màn hình chính</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- tutorial (auto-play) -->
+
+<div id="tut-overlay" class="fixed inset-0 z-[80] flex items-center justify-center px-4" style="background:rgba(15,23,42,.45);backdrop-filter:blur(4px);">
+  <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col" style="max-height:94vh;">
+    <div class="flex items-center gap-3 px-6 pt-5 pb-3">
+      <div class="w-9 h-9 rounded-xl bg-white border border-blue-100 flex items-center justify-center shrink-0"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/3840px-Icon_of_Zalo.svg.png" alt="Zalo" class="w-6 h-6 object-contain"></div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-extrabold tracking-tight text-slate-900">ZBS Sandbox Studio</div>
+        <div class="text-[11px] text-slate-400 font-medium">Hướng dẫn sử dụng nhanh</div>
+      </div>
+      <button id="tut-skip" class="text-[11px] font-bold text-slate-400 hover:text-slate-600 transition">Bỏ qua</button>
+    </div>
+    <div id="tut-bars" class="px-6 flex gap-1.5"></div>
+    <div class="px-6 pt-5 pb-1 flex-1 overflow-y-auto">
+      <div id="tut-visual" class="rounded-2xl border border-slate-100 bg-slate-50 h-56 flex items-center justify-center overflow-hidden mb-4 animate-fade-in"></div>
+      <h3 id="tut-title" class="text-base font-extrabold tracking-tight text-slate-900"></h3>
+      <p id="tut-desc" class="text-[13px] text-slate-500 font-medium leading-relaxed mt-1.5"></p>
+      <label id="tut-accept-wrap" class="hidden mt-4 items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/50 p-3.5 cursor-pointer">
+        <input id="tut-accept" type="checkbox" class="mt-0.5 w-4 h-4 accent-[#0068FF] shrink-0">
+        <span class="text-[12px] text-slate-700 font-semibold leading-relaxed">Tôi đã đọc hướng dẫn và đồng ý tuân thủ các nguyên tắc kiểm duyệt mẫu tin của ZBS.</span>
+      </label>
+      <p id="tut-gate-note" class="hidden text-[11px] text-rose-500 font-semibold mt-2">Hãy tích xác nhận để bắt đầu.</p>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+      <button id="tut-prev" class="text-[12px] font-bold text-slate-400 hover:text-slate-700 transition">Quay lại</button>
+      <div class="flex items-center gap-2">
+        <button id="tut-next" class="inline-flex items-center gap-1.5 bg-zbs text-white text-xs font-extrabold px-5 py-2.5 rounded-xl hover:bg-[#0057d9] transition active:scale-95">Tiếp tục</button>
+        <button id="tut-start" class="hidden inline-flex items-center gap-1.5 bg-zbs text-white text-xs font-extrabold px-5 py-2.5 rounded-xl hover:bg-[#0057d9] transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">Bắt đầu sử dụng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== SHARED VALIDATION ENGINE ===== */
+const PRESETS = {
+  p1: { label: "OTP — Renda (đạt)", tag: "1", json: {
+    oa_id: "112233445", extend_info: "112233445", footer: null, extend_footers: null, "3rd_info": null, "3rd_config": null,
+    sections: [
+      { oa_info: { show: true, vertical: true, horizontal: false, pos: "1", img: { url: "https://stc-oa.zdn.vn/uploads/renda-logo.png", light: "width: 60%;", dark: "src:https://stc-oa.zdn.vn/uploads/renda-logo-dark.png" }, title: null, des: null } },
+      { banner: { show: true, pos: "2", img: null, title: { text: "Mã xác minh của bạn là", type: "text-title", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { banner: { show: true, pos: null, title: { text: "<otp>", type: "text-otp-blue", click: { id: "btn-copy", click_extend_info: "<otp>", action: "action.copy.clipboard", data: "{\"content\":\"<otp>\"}", data_detail: null } } } },
+      { banner: { show: true, pos: "3", img: null, title: { text: "Tuyệt đối KHÔNG chia sẻ mã xác thực cho bất kỳ ai dưới bất kỳ hình thức nào. Mã xác thực có hiệu lực trong 5 phút.", type: "text-normal", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { buttons: { show_all: true, items: [ { pos: 4, text: "Sao chép mã", type: "button-primary", click: { id: "0", click_extend_info: "", action: "action.copy.clipboard", data: "{\"content\":\"<otp>\"}", data_detail: null }, icon_info: null } ] } }
+    ]
+  }},
+  p2: { label: "Thanh toán cước — VNTT (đạt)", tag: "1", json: {
+    oa_id: "278780515", extend_info: "278780515", footer: null, extend_footers: null, "3rd_info": null, "3rd_config": null,
+    sections: [
+      { oa_info: { show: true, vertical: true, horizontal: false, pos: "1", img: { url: "https://stc-oa.zdn.vn/uploads/vntt-logo.png", light: "width: 60%;", dark: "src:https://stc-oa.zdn.vn/uploads/vntt-logo-dark.png" }, title: null, des: null } },
+      { banner: { show: true, pos: "2", img: null, title: { text: "Thông báo Cước dịch vụ viễn thông (cước trả sau):", type: "text-title", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { banner: { show: true, pos: "3", img: null, title: { text: "Xin trân trọng cảm ơn Quý khách đã tin tưởng và sử dụng dịch vụ của VNTT. Chúng tôi xin thông báo chi tiết cước dịch vụ như sau:", type: "text-normal", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { map_info: { show_all: true, items: [
+        { pos: "4", show: true, row: null, key: { title: { text: "Khách hàng", type: null } }, value: { title: { text: "<TenKH>", type: null } } },
+        { pos: "5", show: true, row: null, key: { title: { text: "Mã định danh", type: null } }, value: { title: { text: "<MaKH>", type: null } } },
+        { pos: "6", show: true, row: null, key: { title: { text: "Số tiền", type: null } }, value: { title: { text: "<price>", type: null } } },
+        { pos: "7", show: true, row: null, key: { title: { text: "Kỳ thanh toán", type: null } }, value: { title: { text: "<thang>", type: null } } },
+        { pos: "8", show: true, row: null, key: { title: { text: "Lưu ý", type: null } }, value: { title: { text: "<LuuY>", type: null } } }
+      ] } },
+      { open_utility: { highlight_box: true, top: { pos: "open_utility_top_9", contents: { pos: "open_utility_top_content_11", show: true, items: [
+        { pos: "item_12", text: "Số tiền thanh toán", type: "text-title-payment" },
+        { pos: "item_13", text: "<price>đ", type: "text-money" },
+        { pos: "item_14", text: "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV)", type: "text-subtext" },
+        { pos: "item_15", text: "Tài khoản: <MaKH> - CÔNG TY CỔ PHẦN CÔNG NGHỆ & TRUYỀN THÔNG VIỆT NAM", type: "text-subtext" }
+      ] }, show: true }, pos: "open_utility_8", show: true, type: "payment" } },
+      { buttons: { show_all: true, items: [
+        { pos: 16, text: "Thanh toán ngay", type: "button-primary", click: { id: "0", click_extend_info: "", action: "PAYMENT", data: null, data_detail: null }, icon_info: null },
+        { pos: 17, text: "Quan tâm OA", type: "button-neutral", click: { id: "1", click_extend_info: "", action: "action.open.inapp", data: "https://oa.zalo.me/278780515", data_detail: null }, icon_info: null }
+      ] } }
+    ]
+  }},
+  p3: { label: "Lỗi: SĐT trong nội dung — Toyota", tag: "2", json: {
+    oa_id: "267129129", extend_info: "267129129", footer: null, extend_footers: null, "3rd_info": null, "3rd_config": null,
+    sections: [
+      { oa_info: { show: true, vertical: true, horizontal: false, pos: "1", img: { url: "https://stc-oa.zdn.vn/uploads/toyota-logo.png", light: "width: 60%;", dark: "src:https://stc-oa.zdn.vn/uploads/toyota-logo-dark.png" }, title: null, des: null } },
+      { banner: { show: true, pos: "2", img: null, title: { text: "Xin chào <customer_name>,", type: "text-title", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { banner: { show: true, pos: "3", img: null, title: { text: "Toyota Bình Dương xin trân trọng thông báo nhân viên phụ trách của Quý khách đã ngừng công tác từ ngày 01/06/2026. Chúng tôi chân thành cảm ơn Quý khách đã tin tưởng và đồng hành.", type: "text-normal", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { banner: { show: true, pos: "4", img: null, title: { text: "Mọi nhu cầu hỗ trợ tiếp theo, Quý Khách vui lòng liên hệ hoặc nhắn tin trực tiếp qua Zalo chính thức của Toyota Bình Dương hoặc gọi 0901 550 112 để được phục vụ nhanh chóng. Trân trọng!", type: "text-normal", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { map_info: { show_all: true, items: [
+        { pos: "5", show: true, row: null, key: { title: { text: "Tên khách hàng", type: null } }, value: { title: { text: "<customer_name>", type: null } } },
+        { pos: "6", show: true, row: null, key: { title: { text: "Số điện thoại", type: null } }, value: { title: { text: "<phone_number>", type: null } } }
+      ] } },
+      { buttons: { show_all: true, items: [
+        { pos: 7, text: "Quan tâm OA", type: "button-primary", click: { id: "0", click_extend_info: "", action: "action.open.inapp", data: "https://oa.zalo.me/267129129", data_detail: null }, icon_info: null }
+      ] } }
+    ]
+  }},
+  p4: { label: "Lỗi: tham số sai vai trò — Fastie", tag: "2", json: {
+    oa_id: "454726514", extend_info: "454726514", footer: null, extend_footers: null, "3rd_info": null, "3rd_config": null,
+    sections: [
+      { oa_info: { show: true, vertical: true, horizontal: false, pos: "1", img: { url: "https://stc-oa.zdn.vn/uploads/fastie-logo.png", light: "width: 60%;", dark: "src:https://stc-oa.zdn.vn/uploads/fastie-logo-dark.png" }, title: null, des: null } },
+      { banner: { show: true, pos: "2", img: null, title: { text: "Kính gửi Quý khách <owner_hkd>,", type: "text-title", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { banner: { show: true, pos: "3", img: null, title: { text: "Theo yêu cầu nhận báo cáo định kỳ đã thiết lập trên tài khoản, Fastie gửi Quý khách bảng tổng hợp số liệu kinh doanh được ghi nhận của tháng <month_year> từ Hộ kinh doanh <name_hkd> như sau:", type: "text-normal", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { map_info: { show_all: true, items: [
+        { pos: "4", show: true, row: null, key: { title: { text: "Doanh thu tiền mặt", type: null } }, value: { title: { text: "<cash_rev>", type: null } } },
+        { pos: "5", show: true, row: null, key: { title: { text: "Doanh thu chuyển khoản", type: null } }, value: { title: { text: "<bank_rev>", type: null } } },
+        { pos: "6", show: true, row: null, key: { title: { text: "Tổng doanh thu", type: null } }, value: { title: { text: "<total_rev>", type: null } } }
+      ] } },
+      { buttons: { show_all: true, items: [
+        { pos: 7, text: "Quản lý doanh thu", type: "button-primary", click: { id: "0", click_extend_info: "", action: "action.open.inapp", data: "https://zalo.me/s/992396493071053582/", data_detail: null }, icon_info: null }
+      ] } }
+    ]
+  }},
+  p5: { label: "Lỗi: CTA dẫn nhóm/thành viên — PJP", tag: "3", json: {
+    oa_id: "351705571", extend_info: "351705571", footer: null, extend_footers: null, "3rd_info": null, "3rd_config": null,
+    sections: [
+      { oa_info: { show: true, vertical: true, horizontal: false, pos: "1", img: { url: "https://stc-oa.zdn.vn/uploads/pjp-logo.png", light: "width: 60%;", dark: "src:https://stc-oa.zdn.vn/uploads/pjp-logo-dark.png" }, title: null, des: null } },
+      { banner: { show: true, pos: "2", img: null, title: { text: "LỢI ÍCH CỦA TIỆM VÀNG KHI ĐĂNG KÝ THÀNH VIÊN CỦA PJP", type: "text-title", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { banner: { show: true, pos: "3", img: null, title: { text: "Xin chào Quý Khách Hàng <customer_name> có mã khách hàng <customer_code>, PJP tặng riêng cho Quý Khách Hàng mã đặc quyền <ma_voucher>.", type: "text-normal", click: null, id: "", icon: null, light: "", dark: "", wrapper: null }, click: null } },
+      { buttons: { show_all: true, items: [
+        { pos: 7, text: "Bấm Vào Đây Để Tham Gia", type: "button-primary", click: { id: "0", click_extend_info: "", action: "action.open.inapp", data: "https://post.oa.zalo.me/d?id=3786899142d4ab8af2c5&pageId=2364190025531152482", data_detail: null }, icon_info: null },
+        { pos: 8, text: "Quan tâm OA", type: "button-neutral", click: { id: "1", click_extend_info: "", action: "action.open.inapp", data: "https://oa.zalo.me/2364190025531152482", data_detail: null }, icon_info: null }
+      ] } }
+    ]
+  }}
+};
+
+/* ===================== DUMP RECOVERY ENGINE + DATA RECOVERY ===================== */
+/* ===================== STAGE 1: tokenizer cho Object Tree Dump ===================== */
+/*
+ * Dữ liệu thật cho thấy số lượng dấu nháy kép quanh key/value KHÔNG phải luôn đúng 2 và
+ * KHÔNG phải luôn đối xứng — ví dụ dòng đầu của một dump thật: '''root'':{7 items (3 dấu nháy
+ * mở, chỉ 2 dấu nháy đóng). Một bước collapse bằng regex cố định (yêu cầu đúng 2+2) sẽ để sót
+ * lại 1 dấu nháy lẻ, làm lệch toàn bộ phần tokenize phía sau. Vì vậy tokenizer tự ĐẾM ĐỘNG độ dài
+ * của run dấu nháy ở cả hai đầu (mở và đóng) thay vì giả định cố định, nên không cần một bước
+ * collapseDoubledQuotes riêng nữa — tokenizer xử lý trực tiếp trên text gốc.
+ */
+function tokenizeDump(s) {
+  const tokens = [];
+  let i = 0;
+  const n = s.length;
+  while (i < n) {
+    const c = s[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === "{" || c === "}" || c === "[" || c === "]" || c === ":" || c === ",") {
+      tokens.push({ t: c }); i++; continue;
+    }
+    if (c === '"') {
+      let openLen = 0;
+      while (i + openLen < n && s[i + openLen] === '"') openLen++;
+      let j = i + openLen, buf = "", closeStart = -1, closeLen = 0, hitStructural = false;
+      while (j < n) {
+        const cj = s[j];
+        if (cj === '"') {
+          let runLen = 0;
+          while (j + runLen < n && s[j + runLen] === '"') runLen++;
+          const afterRun = j + runLen;
+          // Tách trường hợp đặc biệt: từ 2 dấu nháy liên tiếp trở lên RẤT có thể là "giá trị vừa
+          // đóng dính liền luôn key kế tiếp" khi người dùng dán dữ liệu không còn khoảng trắng/dòng
+          // mới (VD thật: ...pos":string"1""img":{3 items... — "1" đóng lại rồi "img" mở ra ngay sau,
+          // không hề có dấu phẩy/khoảng trắng ở giữa) — KHÁC với dấu nháy lồng thật trong nội dung.
+          // Để phân biệt: nếu chỉ tiêu thụ 1 dấu nháy của loạt này rồi phần còn lại khớp đúng mẫu
+          // "một key mới dạng "..." theo sau là dấu hai chấm", coi đây là ranh giới 2 token thật,
+          // đóng giá trị hiện tại ngay, chỉ tiêu thụ đúng 1 dấu nháy (không phải cả loạt).
+          if (runLen >= 2 && buf.trim() !== "" && /^"[^"]*"\s*:/.test(s.slice(j + 1))) {
+            closeStart = j; closeLen = 1;
+            break;
+          }
+          if (buf.trim() !== "" && !looksLikeStringBoundary(s, afterRun)) {
+            // đã có nội dung thật, và ngay sau dấu nháy này KHÔNG có dấu hiệu kết thúc rõ ràng
+            // (không phải , } ] : hay dấu nháy khác) -> nhiều khả năng là dấu nháy bị NHÚNG vào
+            // giữa nội dung (ví dụ html attribute escaped kiểu <span class=""param"">) -> giữ
+            // lại 1 dấu nháy trong nội dung rồi tiếp tục quét, không coi đây là điểm đóng.
+            buf += '"';
+            j = afterRun;
+            continue;
+          }
+          closeStart = j; closeLen = runLen;
+          break;
+        }
+        if ("{}[]:,".indexOf(cj) !== -1 && buf.trim() === "") {
+          // chưa tích lũy nội dung thật nào (chỉ khoảng trắng) mà đã gặp ký tự cấu trúc ->
+          // không có dấu đóng nào ở gần, dừng quét ngay để tránh chạy tràn qua hết phần còn
+          // lại của tài liệu; coi giá trị hiện tại là rỗng, để ký tự cấu trúc này được tokenize
+          // lại bình thường ở vòng lặp kế tiếp.
+          hitStructural = true;
+          break;
+        }
+        if (cj === "\\" && j + 1 < n) { buf += cj + s[j + 1]; j += 2; }
+        else { buf += cj; j++; }
+      }
+      if (hitStructural) {
+        tokens.push({ t: "str", v: "" });
+        i = j;
+      } else if (closeStart === -1) {
+        // không tìm thấy dấu đóng -> hết dữ liệu, lấy hết phần còn lại làm nội dung, không throw
+        tokens.push({ t: "str", v: buf });
+        i = n;
+      } else if (buf.length > 0 && buf.trim() === "") {
+        // nội dung giữa 2 lần gặp dấu nháy CHỈ có khoảng trắng/newline -> nhiều khả năng đây là
+        // một chuỗi rỗng mà tool export quên thêm cặp nháy đóng đối xứng, còn run dấu nháy "đóng"
+        // vừa tìm được thực chất là điểm BẮT ĐẦU của token kế tiếp -> không tiêu thụ nó.
+        tokens.push({ t: "str", v: "" });
+        i = closeStart;
+      } else {
+        tokens.push({ t: "str", v: buf });
+        i = closeStart + closeLen;
+      }
+      continue;
+    }
+    const numMatch = /^-?\d+(\.\d+)?/.exec(s.slice(i));
+    if (numMatch) { tokens.push({ t: "num", v: numMatch[0] }); i += numMatch[0].length; continue; }
+    const wordMatch = /^[A-Za-z_][A-Za-z0-9_]*/.exec(s.slice(i));
+    if (wordMatch) { tokens.push({ t: "word", v: wordMatch[0] }); i += wordMatch[0].length; continue; }
+    i++;
+  }
+  return tokens;
+}
+
+function looksLikeStringBoundary(s, pos) {
+  let p = pos;
+  while (p < s.length && /\s/.test(s[p])) p++;
+  if (p >= s.length) return true;
+  const c = s[p];
+  if (",}]:".indexOf(c) !== -1) return true;
+  if (c === '"') return true;
+  return false;
+}
+
+/* ===================== STAGE 2: recursive-descent parser khoan dung (giữ nguyên) ===================== */
+function parseDumpTokens(tokens) {
+  let pos = 0;
+  function peek() { return tokens[pos]; }
+  function next() { return tokens[pos++]; }
+  function skipItemsCountAnnotation() {
+    if (peek() && peek().t === "num" && tokens[pos + 1] && tokens[pos + 1].t === "word" && /^items?$/i.test(tokens[pos + 1].v)) { next(); next(); }
+  }
+  function parseValue() {
+    const tok = peek();
+    if (!tok) return null; // hết dữ liệu giữa đường -> trả về null, KHÔNG throw, để recovery vẫn tiếp tục được
+    if (tok.t === "word") {
+      const raw = tok.v;
+      const w = raw.toLowerCase();
+      if (w === "true" || w === "booltrue") { next(); return true; }
+      if (w === "false" || w === "boolfalse") { next(); return false; }
+      if (w === "null") { next(); return null; }
+      let m;
+      if ((m = /^int(-?\d+(?:\.\d+)?)$/i.exec(raw))) { next(); return Number(m[1]); }
+      if ((m = /^(?:integer|number|float|double)(-?\d+(?:\.\d+)?)$/i.exec(raw))) { next(); return Number(m[1]); }
+      if (w === "array" && tokens[pos + 1] && tokens[pos + 1].t === "[") { next(); return parseArray(); }
+      if ((w === "string" || w === "str") && tokens[pos + 1] && tokens[pos + 1].t === "str") { next(); return parseValue(); }
+      if ((w === "bool" || w === "boolean") && tokens[pos + 1] && tokens[pos + 1].t === "word" && /^(true|false)$/i.test(tokens[pos + 1].v)) { next(); return parseValue(); }
+      if (["int", "integer", "number", "float", "double"].indexOf(w) !== -1 && tokens[pos + 1] && tokens[pos + 1].t === "num") { next(); return parseValue(); }
+      next();
+      return raw;
+    }
+    if (tok.t === "{") return parseObject();
+    if (tok.t === "[") return parseArray();
+    if (tok.t === "str") { next(); return tok.v; }
+    if (tok.t === "num") { next(); return Number(tok.v); }
+    next();
+    return null; // token lạ -> bỏ qua, không throw
+  }
+  function parseObject() {
+    next();
+    skipItemsCountAnnotation();
+    const obj = {};
+    let guard = 0;
+    while (peek() && peek().t !== "}") {
+      if (++guard > 80000) break; // an toàn, không throw — trả về những gì đã đọc được
+      if (peek().t === ",") { next(); continue; }
+      const keyTok = next();
+      let key;
+      if (keyTok.t === "str") key = keyTok.v;
+      else if (keyTok.t === "word" || keyTok.t === "num") key = String(keyTok.v);
+      else continue; // key không hợp lệ -> bỏ qua phần tử này, không throw cả object
+      if (peek() && peek().t === ":") next();
+      else continue;
+      obj[key] = parseValue();
+      if (peek() && peek().t === ",") next();
+    }
+    if (peek() && peek().t === "}") next();
+    return obj;
+  }
+  function parseArray() {
+    next();
+    skipItemsCountAnnotation();
+    const arr = [];
+    let guard = 0;
+    while (peek() && peek().t !== "]") {
+      if (++guard > 80000) break;
+      if (peek().t === ",") { next(); continue; }
+      if ((peek().t === "num" || peek().t === "word") && tokens[pos + 1] && tokens[pos + 1].t === ":") { next(); next(); }
+      arr.push(parseValue());
+      if (peek() && peek().t === ",") next();
+    }
+    if (peek() && peek().t === "]") next();
+    return arr;
+  }
+  // ---- Top-level dispatch: tự suy luận cấu trúc khi dữ liệu KHÔNG có dấu { } / [ ] bao ngoài ----
+  if (tokens.length && (tokens[0].t === "{" || tokens[0].t === "[")) {
+    return parseValue();
+  }
+  if (tokens.length >= 2 && (tokens[0].t === "str" || tokens[0].t === "word") && tokens[1].t === ":") {
+    // "Headless object": một chuỗi "key":value liên tiếp nhưng KHÔNG có { } bao ngoài
+    // (ví dụ copy chỉ phần thân một section, thiếu cả dấu { mở đầu lẫn } kết thúc, thiếu cả dấu phẩy
+    // giữa các dòng). Tool tự suy luận: coi toàn bộ chuỗi token này là một object, tự "thêm" { } và
+    // dấu phẩy còn thiếu trong lúc dựng object, không cần người dùng tự sửa tay.
+    const obj = {};
+    let guard = 0;
+    while (pos < tokens.length) {
+      if (++guard > 80000) break;
+      const cur = peek();
+      if (!cur) break;
+      if (cur.t === ",") { next(); continue; }
+      if (cur.t !== "str" && cur.t !== "word" && cur.t !== "num") { next(); continue; }
+      next();
+      const key = String(cur.v);
+      if (peek() && peek().t === ":") next(); else continue;
+      obj[key] = parseValue();
+      if (peek() && peek().t === ",") next();
+    }
+    return obj;
+  }
+  return parseValue();
+}
+
+/* ===================== STAGE 3: DATA RECOVERY ENGINE ===================== */
+function unwrapRootIfNeeded(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const keys = Object.keys(value);
+    if (keys.length === 1 && keys[0] === "root" && value.root && typeof value.root === "object") return value.root;
+  }
+  return value;
+}
+
+const RECOGNIZED_SECTION_KEYS = ["oa_info", "banner", "map_info", "open_utility", "buttons", "rating", "custom_section", "logo", "title", "paragraph", "carousel"];
+
+function isPlausibleSectionMatch(key, val) {
+  // "title"/"paragraph" chỉ tính là section (kiểu carousel-flat) khi giá trị là chuỗi thuần,
+  // để tránh nhận nhầm một field lồng sâu nào đó tên trùng "title" nhưng bản chất khác (vd object {text,type}).
+  if (key === "title" || key === "paragraph") return typeof val === "string";
+  return true;
+}
+
+function recoverSections(value) {
+  const found = [];
+  let visited = 0;
+  function walk(node) {
+    if (visited++ > 30000) return; // chặn vòng lặp/đệ quy quá sâu trên dữ liệu bất thường, không throw
+    if (Array.isArray(node)) { node.forEach(walk); return; }
+    if (!node || typeof node !== "object") return;
+    const keys = Object.keys(node);
+    const matched = keys.filter(function (k) { return RECOGNIZED_SECTION_KEYS.indexOf(k) !== -1 && isPlausibleSectionMatch(k, node[k]); });
+    if (matched.length > 0) {
+      matched.forEach(function (k) {
+        const wrapper = {}; wrapper[k] = node[k];
+        found.push(wrapper);
+      });
+      // chỉ đi tiếp vào các key CHƯA khớp, tránh quét lại nội dung bên trong section vừa tìm được
+      keys.forEach(function (k) { if (matched.indexOf(k) === -1) walk(node[k]); });
+    } else {
+      keys.forEach(function (k) { walk(node[k]); });
+    }
+  }
+  walk(value);
+  return found;
+}
+
+function findFirstValueByKey(value, targetKey) {
+  let result = null, visited = 0;
+  function walk(node) {
+    if (result !== null || visited++ > 30000) return;
+    if (Array.isArray(node)) { node.forEach(walk); return; }
+    if (!node || typeof node !== "object") return;
+    if (Object.prototype.hasOwnProperty.call(node, targetKey) && (typeof node[targetKey] === "string" || typeof node[targetKey] === "number")) {
+      result = node[targetKey];
+      return;
+    }
+    Object.keys(node).forEach(function (k) { walk(node[k]); });
+  }
+  walk(value);
+  return result;
+}
+
+function formatNoteFor(format) {
+  const map = {
+    object_tree_dump: "Đã phát hiện định dạng Object Tree Dump (kiểu JSON Viewer/Object Tree) và tự động chuyển đổi sang JSON chuẩn.",
+    root_wrapper: 'Đã phát hiện dữ liệu được bọc trong { "root": {...} } và tự động bóc lớp "root".'
+  };
+  return map[format] || null;
+}
+
+/**
+ * Entry point: KHÔNG BAO GIỜ throw, trừ khi input rỗng (caller tự kiểm tra rỗng trước khi gọi).
+ * Luôn cố gắng đọc và dựng lại canonical.sections[] bằng mọi giá, theo nguyên tắc recovery.
+ */
+/*
+ * "3rd_info"/"3rd_config" chứa một khối JSON khác được nhúng DƯỚI DẠNG STRING (mỗi dấu nháy
+ * thật bên trong lại tiếp tục bị nhân đôi thành dấu nháy kép) — không tool nào trong app này
+ * cần đọc giá trị thật của 2 field này (chỉ phục vụ tích hợp thanh toán/QR của app Zalo), nhưng
+ * nếu để tokenizer đi vào sâu trong đó, độ lệch dấu nháy có thể làm nhiễu phần đọc tiếp theo.
+ * Cách ly an toàn: dùng đếm ĐỘ SÂU DẤU { } (không đếm dấu nháy) để tìm đúng điểm kết thúc khối
+ * nhúng, rồi thay nguyên cụm "field":string"{...}" bằng "field":NULL.
+ */
+function stripOpaqueStringifiedFields(text, fieldNames) {
+  let result = text;
+  fieldNames.forEach(function (name) {
+    const re = new RegExp('"+\\s*' + name + '\\s*"+\\s*:\\s*(?:string)?\\s*"+', "i");
+    let guard = 0;
+    let m;
+    while ((m = re.exec(result)) && guard++ < 20) {
+      let k = m.index + m[0].length;
+      const braceStart = result.indexOf("{", k);
+      if (braceStart === -1 || braceStart - k > 5) break; // không có { gần đó -> không phải JSON nhúng, bỏ qua
+      let depth = 0, found = -1;
+      for (let p = braceStart; p < result.length; p++) {
+        if (result[p] === "{") depth++;
+        else if (result[p] === "}") { depth--; if (depth === 0) { found = p; break; } }
+      }
+      if (found === -1) break;
+      let endPos = found + 1;
+      while (endPos < result.length && result[endPos] === '"') endPos++;
+      result = result.slice(0, m.index) + '"' + name + '":NULL' + result.slice(endPos);
+    }
+  });
+  return result;
+}
+
+function detectAndRecover(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return { sections: [], mode: "empty", hadExplicitSectionsArray: false, conversionNote: null, oaId: null };
+
+  let parsedValue = null;
+  let mode = "standard_json";
+  let conversionNote = null;
+
+  let candidate = text;
+  const rootPrefixMatch = /^["']?root["']?\s*:\s*/.exec(candidate);
+  if (rootPrefixMatch) candidate = candidate.slice(rootPrefixMatch[0].length);
+
+  try {
+    parsedValue = JSON.parse(candidate);
+  } catch (eStandard) {
+    const dumpSignals = /\d+\s*items?\b|\bstring"|\bbool\s*(true|false)\b|\bboolfalse\b|\bbooltrue\b|\bint-?\d|\bNULL\b/i;
+    if (dumpSignals.test(text)) {
+      const isolated = stripOpaqueStringifiedFields(text, ["3rd_info", "3rd_config"]);
+      const tokens = tokenizeDump(isolated);
+      parsedValue = parseDumpTokens(tokens);
+      mode = "object_tree_dump";
+      conversionNote = formatNoteFor("object_tree_dump");
+    } else {
+      parsedValue = null;
+      mode = "unparsed";
+    }
+  }
+
+  const beforeUnwrap = parsedValue;
+  parsedValue = unwrapRootIfNeeded(parsedValue);
+  if (parsedValue !== beforeUnwrap && !conversionNote) conversionNote = formatNoteFor("root_wrapper");
+
+  const hadExplicitSectionsArray = !!(parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue) && Array.isArray(parsedValue.sections));
+  const sections = recoverSections(parsedValue);
+  const oaId = findFirstValueByKey(parsedValue, "oa_id");
+
+  return { sections: sections, mode: mode, hadExplicitSectionsArray: hadExplicitSectionsArray, conversionNote: conversionNote, oaId: oaId };
+}
+
+
+
+
+
+/* ===================== NORMALIZER ===================== */
+/* Dữ liệu Zalo thật thường bọc tham số bằng <span class="param"><ten_bien></span> để tô màu khi
+   hiển thị (xem mẫu Pharmacity/Nha Khoa Đông Nam...) — đây CHỈ là markup trình bày, không phải nội
+   dung hay tham số thật. Nếu không gỡ trước, bộ trích tham số <...> sẽ nhận luôn cặp thẻ span này
+   làm "tham số", gây báo sai GEN-21/22/23 (định dạng tham số) và GEN-25 (thiếu tiền tố) trên hầu
+   hết mẫu thật — kể cả mẫu đã được duyệt thật ngoài đời. Gỡ ngay tại điểm đọc text từ JSON để mọi
+   bước sau (kiểm tra, xem trước, đề xuất sửa) đều dùng đúng nội dung sạch. */
+function stripParamSpanWrapper(text) {
+  if (typeof text !== "string") return text;
+  return text.replace(/<span[^>]*class\s*=\s*["']param["'][^>]*>/gi, "").replace(/<\/span>/gi, "");
+}
+
+function collectTextNode(titleObj, acc) {
+  if (!titleObj || typeof titleObj.text !== "string") return;
+  const type = titleObj.type || "text-normal";
+  acc.textNodes.push({ text: stripParamSpanWrapper(titleObj.text), type: type });
+  if (type === "text-otp-blue") acc.hasOtp = true;
+}
+
+function handleSection(sec, acc) {
+  if (!sec || typeof sec !== "object") return;
+  const key = Object.keys(sec)[0];
+  const val = sec[key];
+  switch (key) {
+    case "oa_info":
+      if (val && val.img) acc.logo = val.img.url || acc.logo;
+      if (val && val.title) collectTextNode(val.title, acc);
+      break;
+    case "banner":
+      if (val && val.title) collectTextNode(val.title, acc);
+      break;
+    case "map_info":
+      ((val && val.items) || []).forEach(function (item) {
+        const k = item.key && item.key.title ? item.key.title.text : "";
+        const v = item.value && item.value.title ? item.value.title.text : "";
+        acc.mapRows.push({ key: stripParamSpanWrapper(k || ""), value: stripParamSpanWrapper(v || "") });
+      });
+      break;
+    case "open_utility": {
+      const items = (val && val.top && val.top.contents && val.top.contents.items) || [];
+      acc.openUtility = { type: (val && val.type) || null, items: items.map(function (it) { return { text: stripParamSpanWrapper(it.text), type: it.type }; }) };
+      break;
+    }
+    case "buttons":
+      ((val && val.items) || []).forEach(function (it) {
+        let phone = null, link = null;
+        if (it.click) {
+          if (it.click.action === "action.open.phone") {
+            try { phone = JSON.parse(it.click.data).phoneCode; } catch (e) { /* ignore */ }
+          } else if (typeof it.click.data === "string" && /^https?:\/\//.test(it.click.data)) {
+            link = it.click.data;
+          }
+        }
+        acc.buttons.push({ label: stripParamSpanWrapper(it.text), type: it.type, action: it.click ? it.click.action : null, phone: phone, link: link });
+      });
+      break;
+    case "rating":
+      acc.hasStars = true;
+      break;
+    case "custom_section":
+      break;
+    case "logo":
+      if (val) acc.logo = val.light || val.dark || acc.logo;
+      break;
+    case "title":
+      if (typeof val === "string") acc.textNodes.push({ text: stripParamSpanWrapper(val), type: "text-title" });
+      break;
+    case "paragraph":
+      if (typeof val === "string") acc.textNodes.push({ text: stripParamSpanWrapper(val), type: "text-normal" });
+      break;
+    case "carousel": {
+      ((val && val.c_card) || []).forEach(function (card) {
+        (card.c_items || []).forEach(function (ci) {
+          if (typeof ci.c_title === "string") acc.textNodes.push({ text: stripParamSpanWrapper(ci.c_title), type: "text-title" });
+          if (typeof ci.c_paragraph === "string") acc.textNodes.push({ text: stripParamSpanWrapper(ci.c_paragraph), type: "text-normal" });
+          (ci.c_buttons || []).forEach(function (b) {
+            const link = (typeof b.c_data === "string" && /^https?:\/\//.test(b.c_data)) ? b.c_data : null;
+            acc.buttons.push({ label: stripParamSpanWrapper(b.c_text), type: b.c_type, action: b.c_action, phone: null, link: link });
+          });
+        });
+      });
+      break;
+    }
+    default:
+      break; // key không nhận diện được -> bỏ qua âm thầm, không phơi bày khái niệm kỹ thuật cho người dùng
+  }
+}
+
+function normalizeTemplate(sections, oaId) {
+  const acc = { textNodes: [], buttons: [], mapRows: [], openUtility: null, hasOtp: false, hasStars: false, logo: null, oaId: oaId || null };
+  (sections || []).forEach(function (sec) {
+    try { handleSection(sec, acc); } catch (e) { /* bỏ qua âm thầm — recovery luôn cố hiển thị phần đọc được, không chặn vì một phần lỗi */ }
+  });
+  return acc;
+}
+
+function allContentSources(acc) {
+  const sources = acc.textNodes.map(function (n) { return n.text; });
+  acc.mapRows.forEach(function (r) { sources.push(r.key); sources.push(r.value); });
+  if (acc.openUtility) acc.openUtility.items.forEach(function (it) { sources.push(it.text); });
+  return sources.filter(function (s) { return typeof s === "string"; });
+}
+
+function extractParams(acc) {
+  const all = [];
+  allContentSources(acc).forEach(function (text) {
+    const matches = text.match(/<[^<>]+>/g) || [];
+    matches.forEach(function (m) {
+      const name = m.slice(1, -1);
+      if (!name.startsWith("$")) all.push({ name: name, context: text });
+    });
+  });
+  return all;
+}
+
+/* ===================== DETERMINISTIC CHECKS ===================== */
+const SHORTENER_DOMAINS = ["bit.ly", "tinyurl.com", "onelink.me", "rebrand.ly", "ldp.to", "shorten.asia"];
+const GROUP_DOMAIN_HINTS = ["zalo.me/g/", "chat.zalo.me", "t.me/joinchat", "facebook.com/groups", "m.me/"];
+const PROHIBITED_KEYWORDS = [
+  { label: "rượu/bia/cồn", re: /r\u01b0\u1ee3u|bia\b|n\u1ed3ng \u0111\u1ed9 c\u1ed1n/i },
+  { label: "đa cấp", re: /\u0111a c\u1ea5p|hoa h\u1ed3ng kh\u00f4ng gi\u1edbi h\u1ea1n/i },
+  { label: "tiền ảo/crypto", re: /ti\u1ec1n \u1ea3o|crypto|bitcoin|coin\b/i },
+  { label: "cờ bạc/cá cược", re: /c\u00e1 c\u01b0\u1ee3c|c\u1edd b\u1ea1c|bingo|poker|bet\b/i },
+  { label: "vũ khí", re: /v\u0169 kh\u00ed|\u0111\u1ea1n d\u01b0\u1ee3c/i },
+  { label: "thuốc lá", re: /thu\u1ed1c l\u00e1|tobacco/i },
+  { label: "sản phẩm người lớn", re: /ng\u01b0\u1edd l\u1edbn|k\u00edch d\u1ee5c/i },
+  { label: "mê tín/phong thủy", re: /gi\u1ea3i h\u1ea1n|gi\u1ea3i v\u1eadn|b\u00f9a|th\u1ea7y ph\u00e1p|t\u00edn ch\u1ee7/i }
+];
+
+function checkPhoneOrLinkInContent(acc) {
+  const phoneRegex = /(?:\+?84|0)(?:[\s.\-]?\d){8,10}\b/;
+  const urlRegex = /https?:\/\/\S+|www\.\S+/i;
+  const out = [];
+  allContentSources(acc).forEach(function (text) {
+    const phoneMatch = phoneRegex.exec(text);
+    if (phoneMatch) out.push({ type: "phone", text: text, match: phoneMatch[0] });
+    const urlMatch = urlRegex.exec(text);
+    if (urlMatch) out.push({ type: "link", text: text, match: urlMatch[0] });
+  });
+  return out;
+}
+
+function checkParamFormat(params) {
+  const seen = new Set(); const out = [];
+  params.forEach(function (p) {
+    if (seen.has(p.name)) return; seen.add(p.name);
+    if (!/^[a-zA-Z0-9_]+$/.test(p.name)) out.push({ param: p.name });
+  });
+  return out;
+}
+
+function checkParamPrefix(acc) {
+  const touching = [];
+  const spaceOnly = [];
+  allContentSources(acc).forEach(function (text) {
+    const re = /<[^<>]+>/g;
+    let m, lastEnd = null, lastName = null;
+    while ((m = re.exec(text))) {
+      const start = m.index;
+      if (lastEnd !== null) {
+        const gap = text.slice(lastEnd, start);
+        if (gap.length === 0) {
+          // Hai tham số dính sát hoàn toàn, không một khoảng trắng nào ở giữa — chắc chắn thiếu tiền tố,
+          // không có cách đọc nào khác hợp lý (VD thật: <discount_discountAmount><discount_discountDesc>).
+          touching.push({ a: lastName, b: m[0], text: text });
+        } else if (gap.replace(/\s/g, "").length === 0) {
+          // Chỉ cách nhau khoảng trắng, không có chữ nào khác — mơ hồ hơn: có thể thiếu tiền tố thật,
+          // nhưng cũng có thể là mẫu xưng hô hợp lệ và phổ biến trong dữ liệu thật, ví dụ
+          // "Mời <xung_ho> <name> (Mã KH: <ma_ho_so>)" — biến xưng hô đứng ngay trước tên đã đóng vai
+          // trò như một tiền tố. Không đủ chắc chắn để tự chặn cứng, để lại cho AI/người dùng xem xét.
+          spaceOnly.push({ a: lastName, b: m[0], text: text });
+        }
+      }
+      lastEnd = start + m[0].length;
+      lastName = m[0];
+    }
+  });
+  return { touching: touching, spaceOnly: spaceOnly };
+}
+
+/* Bộ phân loại vai trò tham số. Đếm số lượng thôi thì không đủ: một mẫu có thể có 5 tham số nhưng
+   toàn là tên + số liệu (doanh thu, số tiền) mà không có MÃ ĐỊNH DANH GIAO DỊCH nào (mã đơn, mã KH,
+   mã hợp đồng, mã hồ sơ, số căn hộ, đợt thanh toán...) — đây chính là lý do thật khiến nhiều mẫu bị
+   từ chối dù "đủ số lượng". Regex dưới đây nhận diện gốc từ thường gặp của mã định danh giao dịch/
+   tài sản, được hiệu chỉnh theo dữ liệu mẫu thật (car_id, ma_ho_so, so_can_ho, dot_thanh_toan,
+   order_code... đều là định danh hợp lệ ở các mẫu ĐÃ DUYỆT). */
+var TXN_ID_PARAM_REGEX = /(_id$|^id$|_code$|code$|^ma_|_ma$|^ma[A-Z]|makh|mahd|mahoadon|madonhang|mathang|mahopdong|maho_so|order|bill|invoice|hoa_?don|contract|hop_dong|ho_so|register|booking|don_hang|^don$|can_ho|so_can|dot_|car_|^xe_|tracking|voucher|coupon|reservation|ticket|^ve_|bien_so|so_hop_dong|so_don)/i;
+var NAME_PARAM_REGEX = /(^ten|_ten$|name|xung_ho|hoten|ho_ten|owner|khach_hang|customer_name)/i;
+
+function classifyParams(params) {
+  const uniqueNames = Array.from(new Set(params.map(function (p) { return p.name; })));
+  const txnIds = uniqueNames.filter(function (n) { return TXN_ID_PARAM_REGEX.test(n); });
+  const names = uniqueNames.filter(function (n) { return NAME_PARAM_REGEX.test(n); });
+  return { uniqueNames: uniqueNames, txnIds: txnIds, names: names };
+}
+
+/* Nội dung có "tự thể hiện giao dịch" qua chữ không? Quy định cho phép thay tham số định danh bằng
+   nội dung/tiêu đề thể hiện rõ giao dịch đã phát sinh (VD "Thông báo tình trạng đơn hàng", "đã thanh
+   toán", "đã đặt lịch"...). Nếu có, không hạ kết luận quá nặng. */
+function contentShowsTransaction(acc) {
+  const joined = (acc.textNodes.map(function (n) { return n.text; }).join(" ")).toLowerCase();
+  return /đơn hàng|đặt hàng|đặt lịch|đặt chỗ|hóa đơn|thanh toán|giao dịch|giao hàng|đã mua|đã sử dụng|tái khám|bảo dưỡng|vé|chuyến|hợp đồng|biến động số dư|số dư/.test(joined);
+}
+
+function checkParamCount(acc, params) {
+  if (acc.hasOtp) return { status: "exempt", count: 0, hasNameParam: false };
+  const cls = classifyParams(params);
+  const hasNameParam = cls.names.length > 0;
+  const ok = hasNameParam ? cls.uniqueNames.length >= 2 : cls.uniqueNames.length >= 3;
+  return { status: ok ? "pass" : "fail", count: cls.uniqueNames.length, hasNameParam: hasNameParam };
+}
+
+/*
+ * T2-06 cụ thể hơn T2-02: mẫu DẠNG KHẢO SÁT phải thể hiện RÕ đã phát sinh giao dịch, không chỉ
+ * cần "tên KH + 1 tham số" như quy tắc chung. Một tham số như <id>/<ma_kh> chỉ xác định KHÁCH
+ * HÀNG LÀ AI, không xác định ĐÃ MUA/DÙNG GÌ — đây chính là lý do thật khiến mẫu dạng này bị từ
+ * chối trong thực tế dù checkParamCount ở trên báo "pass". Đây là rào chắn rẻ tiền, bổ sung cho
+ * lớp AI (A1) — không thay thế, vì việc phân loại "tham số nào thực sự là giao dịch" vẫn cần
+ * hiểu ngữ nghĩa; rule này chỉ bắt đúng trường hợp rõ ràng nhất: TOÀN BỘ tham số đều thuộc nhóm
+ * định danh khách hàng quen thuộc, không có tham số nào khác.
+ */
+function checkSurveyTransactionEvidence(acc, tag, params) {
+  // Bỏ điều kiện "chỉ áp dụng khi tag=2": theo TAG-05(d), nội dung dạng khảo sát/đánh giá dịch vụ
+  // LUÔN PHẢI gắn Tag 2 bất kể doanh nghiệp khai tag gì — nếu chỉ kiểm tra lúc tag=2, người dùng
+  // khai sai tag (VD khai Tag 1) sẽ lách qua được luôn yêu cầu "cần có phát sinh giao dịch rõ ràng"
+  // dù nội dung thực chất là một mẫu khảo sát CSKH.
+  if (acc.hasOtp) return null;
+  const joined = (acc.textNodes.map(function (n) { return n.text; }).join(" ") + " " +
+    acc.buttons.map(function (b) { return b.label || ""; }).join(" ")).toLowerCase();
+  const surveyTextHint = /kh\u1ea3o s\u00e1t|\u0111\u00e1nh gi\u00e1|feedback|g\u00f3p \u00fd|tr\u1ea3i nghi\u1ec7m|\u00fd ki\u1ebfn|chia s\u1ebb c\u1ea3m nh\u1eadn/.test(joined);
+  const surveyLinkHint = acc.buttons.some(function (b) {
+    return b.link && /forms\.office\.com|forms\.gle|surveymonkey|typeform|docs\.google\.com\/forms/i.test(b.link);
+  });
+  if (!surveyTextHint && !surveyLinkHint) return null;
+  const uniqueNames = Array.from(new Set(params.map(function (p) { return p.name; })));
+  const identityOnlyRegex = /^(ten|name|hoten|ho_ten|khach_hang|customer_name|id|ma_kh|makh|ma_khach_hang|customer_id|customerid|user_id|userid|sdt|phone|so_dien_thoai|email|dia_chi|address)$/i;
+  const hasNonIdentityParam = uniqueNames.some(function (n) { return !identityOnlyRegex.test(n); });
+  if (hasNonIdentityParam) return null;
+  return { count: uniqueNames.length, tagMismatch: tag !== "2" };
+}
+
+function checkHotlineFormat(acc, tag) {
+  if (tag !== "3") return [];
+  return acc.buttons.filter(function (b) { return b.phone; }).filter(function (b) {
+    return !/^(1800|1900)/.test(String(b.phone).replace(/\D/g, ""));
+  });
+}
+
+function checkShortenedLinks(acc) {
+  return acc.buttons.filter(function (b) { return b.link && SHORTENER_DOMAINS.some(function (d) { return b.link.includes(d); }); });
+}
+
+function checkVoucherTemplateNeeded(acc) {
+  const kw = /voucher|m\u00e3 gi\u1ea3m gi\u00e1|gi\u1ea3m gi\u00e1|khuy\u1ebfn m\u00e3i|discount/i;
+  const joined = acc.textNodes.map(function (n) { return n.text; }).join(" ");
+  const mentions = kw.test(joined);
+  const isVoucherStruct = acc.openUtility && acc.openUtility.type === "voucher";
+  return mentions && !isVoucherStruct;
+}
+
+function checkGroupLinkHeuristic(acc) {
+  return acc.buttons.filter(function (b) { return b.link && GROUP_DOMAIN_HINTS.some(function (d) { return b.link.includes(d); }); });
+}
+
+/* Link KHÔNG nằm trong danh sách nhóm cứng nhưng có dạng dễ dẫn vào bài đăng/cộng đồng/đăng ký
+   thành viên — ví dụ post.oa.zalo.me/d?... (link bài đăng OA), hoặc nút có chữ "tham gia"/"cộng
+   đồng"/"thành viên". Đây là vùng xám: có thể hợp lệ (bài đăng chính thức) hoặc vi phạm (dẫn vào
+   nhóm). Không block cứng để tránh chặn oan, chỉ cảnh báo (warn) và để lớp AI xét ý định cụ thể. */
+var SUSPICIOUS_LINK_DOMAINS = ["post.oa.zalo.me/d"];
+var JOIN_INTENT_REGEX = /tham gia|c\u1ed9ng \u0111\u1ed3ng|th\u00e0nh vi\u00ean|v\u00e0o nh\u00f3m|join|group/i;
+function checkSuspiciousGroupIntent(acc) {
+  const out = [];
+  acc.buttons.forEach(function (b) {
+    if (!b.link) return;
+    if (GROUP_DOMAIN_HINTS.some(function (d) { return b.link.includes(d); })) return; // đã bị GEN-29 bắt cứng
+    const domainHit = SUSPICIOUS_LINK_DOMAINS.some(function (d) { return b.link.includes(d); });
+    const labelHit = b.label && JOIN_INTENT_REGEX.test(b.label);
+    if (domainHit || labelHit) out.push(b);
+  });
+  return out;
+}
+
+function checkProhibitedKeywords(acc, tag) {
+  if (tag !== "3") return [];
+  const text = acc.textNodes.map(function (n) { return n.text; }).join(" \n ");
+  return PROHIBITED_KEYWORDS.filter(function (k) { return k.re.test(text); });
+}
+
+function runDeterministicChecks(acc, tag) {
+  const violations = [];
+  const params = extractParams(acc);
+
+  checkPhoneOrLinkInContent(acc).forEach(function (v) {
+    violations.push({
+      ruleId: "GEN-26", severity: "block",
+      title: v.type === "phone" ? "Phát hiện số điện thoại trong nội dung" : "Phát hiện đường link trong nội dung",
+      detail: v.text,
+      matchedText: v.match,
+      suggestion: "Chuyển số điện thoại / link này sang nút CTA (Nút thao tác), không để trong phần nội dung hiển thị."
+    });
+  });
+
+  checkParamFormat(params).forEach(function (v) {
+    violations.push({
+      ruleId: "GEN-21/22/23", severity: "block",
+      title: "Tham số sai định dạng: <" + v.param + ">",
+      detail: "Tham số chỉ được dùng chữ không dấu, số và gạch dưới (_), không khoảng trắng/gạch nối.",
+      suggestion: "Đổi tên tham số, ví dụ thay khoảng trắng/gạch nối bằng gạch dưới."
+    });
+  });
+
+  const prefixRes = checkParamPrefix(acc);
+  prefixRes.touching.forEach(function (v) {
+    violations.push({
+      ruleId: "GEN-25", severity: "block",
+      title: "Hai tham số " + v.a + v.b + " dính liền nhau, thiếu tiền tố giải thích",
+      detail: v.text,
+      suggestion: "Thêm vài chữ mô tả ý nghĩa giữa hai tham số, ví dụ: 'Ưu đãi " + v.a + ", điều kiện " + v.b + "'."
+    });
+  });
+  prefixRes.spaceOnly.forEach(function (v) {
+    violations.push({
+      ruleId: "GEN-25", severity: "warn",
+      title: "Hai tham số " + v.a + " " + v.b + " đứng cạnh nhau, nên kiểm tra lại tiền tố",
+      detail: v.text,
+      suggestion: "Nếu " + v.a + " không phải biến xưng hô/tiền tố tự nhiên cho " + v.b + ", hãy thêm vài chữ mô tả ý nghĩa, ví dụ: 'Ưu đãi " + v.a + ", điều kiện " + v.b + "'."
+    });
+  });
+
+  const countRes = checkParamCount(acc, params);
+  if (countRes.status === "fail") {
+    violations.push({
+      ruleId: "T1-02/T2-02/T3-06", severity: "warn",
+      title: "Số lượng tham số định danh có thể chưa đủ (" + countRes.count + " tham số" + (countRes.hasNameParam ? ", đã có tên KH nhưng thiếu tham số định danh khác" : ", chưa có tên khách hàng") + ")",
+      detail: "Cần tên khách hàng + ít nhất 1 tham số định danh giao dịch, hoặc tổng cộng ít nhất 3 tham số phù hợp nếu không có tên KH.",
+      suggestion: "Bổ sung tên khách hàng hoặc thêm tham số định danh giao dịch cụ thể (mã đơn hàng, mã hợp đồng...)."
+    });
+  } else if (countRes.status === "pass") {
+    violations.push({
+      ruleId: "T1-02/T2-02/T3-06", severity: "weak-pass",
+      title: "Số lượng tham số (" + countRes.count + ") chỉ mới đạt ngưỡng đếm — chưa xác minh được vai trò thật",
+      detail: "Đếm số lượng/tên biến không xác nhận được tham số có thực sự đóng vai trò mã định danh giao dịch hay không.",
+      suggestion: "Xem thêm kết quả ở mục Kiểm tra ngữ nghĩa AI (A1) để xác minh vai trò thật của từng tham số."
+    });
+  }
+
+  // Rule bổ sung (T1-03): KHÔNG có bất kỳ mã định danh giao dịch nào. Khác với việc chỉ đếm số
+  // lượng — ở đây xét VAI TRÒ: nếu toàn bộ tham số chỉ là tên + số liệu/mô tả (doanh thu, số tiền,
+  // kỳ báo cáo...) mà không có một mã đơn/mã KH/mã hợp đồng/mã hồ sơ nào, thì mẫu chưa chứng minh
+  // được "đã phát sinh giao dịch cụ thể". Đây là lý do từ chối thật của nhiều mẫu (VD Fastie báo cáo
+  // doanh thu định kỳ: chỉ có tên chủ hộ + các con số doanh thu). Không áp dụng khi là mẫu OTP/xác
+  // thực (được miễn), và hạ xuống cảnh báo nếu nội dung chữ đã tự thể hiện rõ giao dịch.
+  if (!acc.hasOtp) {
+    const cls = classifyParams(params);
+    if (cls.uniqueNames.length > 0 && cls.txnIds.length === 0) {
+      const selfShows = contentShowsTransaction(acc);
+      violations.push({
+        ruleId: "T1-03", severity: selfShows ? "warn" : "block",
+        title: "Chưa có mã định danh giao dịch nào trong mẫu",
+        detail: "Các tham số hiện có (" + cls.uniqueNames.join(", ") + ") chỉ gồm tên và/hoặc số liệu, chưa có mã nào xác định một giao dịch cụ thể (mã đơn hàng, mã khách hàng, mã hợp đồng, mã hồ sơ...)." +
+          (selfShows ? " Nội dung có nhắc tới ngữ cảnh giao dịch nhưng nên bổ sung mã định danh rõ ràng để chắc chắn." : ""),
+        suggestion: "Bổ sung ít nhất một tham số định danh giao dịch có tiền tố rõ ràng, ví dụ: \"mã đơn hàng <order_code>\", \"mã khách hàng <customer_code>\", hoặc dùng tiêu đề thể hiện giao dịch như \"Thông báo tình trạng đơn hàng\"."
+      });
+    }
+  }
+
+  const surveyRes = checkSurveyTransactionEvidence(acc, tag, params);
+  if (surveyRes) {
+    // Nâng lên BLOCK (không chỉ warn): điều kiện kích hoạt đã rất chặt — chỉ báo khi mẫu có ngữ cảnh
+    // khảo sát rõ ràng VÀ toàn bộ tham số (không sót cái nào) chỉ thuộc nhóm định danh khách hàng,
+    // không có tham số lạ nào có thể là mã giao dịch. Đối chiếu với mẫu thật (khảo sát Nam An, chỉ có
+    // <name>+<id>) cho thấy ZBS từ chối thẳng trường hợp này trên thực tế, không chỉ yêu cầu xem lại.
+    violations.push({
+      ruleId: "T2-06", severity: "block",
+      title: "Mẫu dạng khảo sát nhưng chưa thấy tham số/nội dung thể hiện rõ đã phát sinh giao dịch",
+      detail: (surveyRes.tagMismatch
+        ? "Nội dung dạng khảo sát/đánh giá dịch vụ luôn phải gắn Tag 2 (Chăm sóc khách hàng) theo quy định, bất kể tag đang khai báo là gì. "
+        : "") +
+        "Toàn bộ " + surveyRes.count + " tham số hiện có (tên, mã KH, SĐT...) chỉ xác định KHÁCH HÀNG LÀ AI, chưa có tham số hoặc nội dung nào cho thấy đã thực sự mua/dùng dịch vụ cụ thể.",
+      suggestion: "Bổ sung tham số định danh giao dịch (mã đơn hàng, mã sản phẩm, ngày sử dụng dịch vụ...) hoặc nội dung/tiêu đề thể hiện rõ giao dịch, ví dụ \"Thông báo tình trạng đơn hàng\"." +
+        (surveyRes.tagMismatch ? " Đồng thời đổi tag khai báo về Tag 2." : "")
+    });
+  }
+
+  checkHotlineFormat(acc, tag).forEach(function (b) {
+    violations.push({
+      ruleId: "T3-02", severity: "block",
+      title: "Số hotline CTA chưa đúng định dạng tổng đài",
+      detail: "Nút \"" + b.label + "\" dùng số " + b.phone,
+      suggestion: "Dùng SĐT dạng tổng đài đầu số 1800/1900, hoặc cung cấp minh chứng đây là hotline chính thức ở phần ghi chú."
+    });
+  });
+
+  checkShortenedLinks(acc).forEach(function (b) {
+    violations.push({
+      ruleId: "GEN-27", severity: "block",
+      title: "CTA dùng link rút gọn",
+      detail: "Nút \"" + b.label + "\" -> " + b.link,
+      suggestion: "Dùng link đầy đủ, không dùng dịch vụ rút gọn link (bitly, onelink...)."
+    });
+  });
+
+  if (checkVoucherTemplateNeeded(acc)) {
+    violations.push({
+      ruleId: "GEN-35", severity: "warn",
+      title: "Nội dung có từ khóa voucher/khuyến mãi nhưng chưa thấy cấu trúc Mẫu Voucher",
+      detail: "",
+      suggestion: "Nếu mẫu tin có mã giảm giá/voucher cụ thể, cần đăng ký dùng Mẫu Voucher theo quy định."
+    });
+  }
+
+  checkGroupLinkHeuristic(acc).forEach(function (b) {
+    violations.push({
+      ruleId: "GEN-29", severity: "block",
+      title: "CTA trỏ đến domain nhóm/chat phổ biến",
+      detail: "Nút \"" + b.label + "\" -> " + b.link,
+      suggestion: "Không dùng link điều hướng đến nhóm/nhóm chat trên các nền tảng MXH."
+    });
+  }
+  );
+
+  checkSuspiciousGroupIntent(acc).forEach(function (b) {
+    violations.push({
+      ruleId: "GEN-29b", severity: "warn",
+      title: "Nút CTA có thể đang dẫn vào bài đăng/nhóm/cộng đồng — cần kiểm tra lại",
+      detail: "Nút \"" + b.label + "\" -> " + b.link + ". Link dạng bài đăng (post.oa.zalo.me) hoặc nút mời 'tham gia/cộng đồng/thành viên' dễ bị coi là điều hướng vào nhóm.",
+      suggestion: "Nếu CTA thực sự dẫn vào nhóm/cộng đồng/đăng ký thành viên thì không được phép. Chỉ dùng link tới trang/thông tin chính thức liên quan trực tiếp nội dung mẫu tin."
+    });
+  });
+
+  checkProhibitedKeywords(acc, tag).forEach(function (k) {
+    violations.push({
+      ruleId: "IND-*", severity: "warn",
+      title: "Nội dung có từ khóa liên quan ngành/sản phẩm hạn chế: " + k.label,
+      detail: "",
+      suggestion: "Kiểm tra lại mục IV (ngành đặc biệt) trong rule map — có thể cần giấy phép bổ sung hoặc không được đăng ký Tag 3."
+    });
+  });
+
+  return violations;
+}
+
+/* ===================== AI SEMANTIC CHECK (gọi Anthropic API) ===================== */
+async function runAiCheck(acc, tag) {
+  const contentText = acc.textNodes.map(function (n) { return "[" + n.type + "] " + n.text; }).join("\n");
+  const mapText = acc.mapRows.map(function (r) { return r.key + ": " + r.value; }).join("\n");
+  const buttonText = acc.buttons.map(function (b) { return "- \"" + b.label + "\" (" + (b.action || "") + ") -> " + (b.link || b.phone || ""); }).join("\n");
+  const paramsList = Array.from(new Set(extractParams(acc).map(function (p) { return p.name; }))).join(", ");
+
+  const systemPrompt = "Ban la chuyen gia kiem duyet mau tin nhan ZBS (Zalo Business Solutions), dong vai nguoi rieview thuc te cua Zalo.\n" +
+    "Nhiem vu: phan tich noi dung mau tin duoc trich xuat duoi day. Moi vi pham phai gan dung MOT trong cac ma sau:\n" +
+    "- A1 = thieu tham so/noi dung xac dinh giao dich (transaction_param_check)\n" +
+    "- A2 = van phong me tin/lua gat/than thanh hoa san pham\n" +
+    "- A3 = link/noi dung co y dinh dieu huong vao nhom/cong dong/dang ky thanh vien\n" +
+    "- A4 = loi chinh ta/danh may ro rang\n" +
+    "- A5 = thong tin chuyen khoan (chu tai khoan) khong khop doanh nghiep so huu OA\n" +
+    "Chi tiet tung kiem tra:\n" +
+    "1. tag_check: Tag thuc su phu hop la 1/2/3? So voi tag doanh nghiep khai bao (" + tag + ") co khop khong? (dung field tag_suggested, khong tao violation rieng)\n" +
+    "2. A1 transaction_param_check (QUAN TRONG NHAT): trong cac tham so [" + paramsList + "], tham so nao la THONG TIN DINH DANH KHACH HANG (ten, ma KH, SDT, email - tra loi 'khach hang la ai') va tham so nao la MA DINH DANH GIAO DICH THAT (ma don hang, ma san pham, ma hop dong, ma hoa don, ngay/thoi gian giao dich cu the - tra loi 'da phat sinh giao dich gi'). " +
+    "NEU TOAN BO tham so chi thuoc nhom dinh danh khach hang (khong co tham so nao tra loi duoc 'da phat sinh giao dich gi') VA noi dung/tieu de cung khong the hien ro giao dich cu the nao da xay ra, BAT BUOC bao vi pham A1 (khong bo qua chi vi da co ten KH + 1 tham so) - dac biet voi mau khao sat/CSKH (Tag 2): phai cho thay ro khach hang da thuc su mua/dung dich vu. Ly do cu the giong: 'Vui long bo sung so luong tham so dinh danh / tham so xac dinh giao dich yeu cau hoac su dung noi dung de the hien duoc phat sinh giao dich'.\n" +
+    "3. A3 link_intent_check: cac nut CTA co dau hieu moi tham gia nhom/cong dong/dang ky thanh vien khong, du domain co the khong bi chan? Luu y link dang post.oa.zalo.me/d?..., hoac link di kem chu 'tham gia', 'dang ky thanh vien', 'cong dong', 'group', 'nhom'.\n" +
+    "4. A4 tone_typo_check: noi dung co loi chinh ta/danh may ro rang (VD 'KICH HOA' le ra la 'KICH HOAT', thieu/thua/sai ky tu) khong? Soi ky tung tu. A2 neu co van phong me tin/lua gat/than thanh hoa.\n" +
+    "5. A5 bank_owner_check: neu mau co thong tin chuyen khoan (so tai khoan + ten chu tai khoan), kiem tra ten chu TK co khop ten DN so huu OA (OA ID o tren) khong. Neu chu TK la phap nhan/ca nhan KHAC (VD OA '12bay' nhung chu TK 'CTY TNHH MTV TM NGUYEN DUONG') -> bao A5: thong tin chuyen khoan can la cua chinh DN so huu OA, neu khac can van ban uy quyen thu ho. Neu thay tu 'don hang' chung chung ma le ra can la 'ma don hang' -> goi y sua.\n" +
+    "QUAN TRONG ve truong evidence cho A2 va A3: PHAI trich NGUYEN VAN (copy chinh xac tu nguon, khong dien giai lai, khong rut gon) cum tu NGAN NHAT du de xac dinh vi pham - KHONG copy nguyen ca cau/ca doan neu phan con lai khong lien quan. He thong dung dung doan evidence nay de tu xoa khoi noi dung khi nguoi dung yeu cau de xuat sua.\n" +
+    "CACH VIET ket qua cho nguoi dung KHONG ranh ky thuat: truong issue va suggestion viet tieng Viet co dau, ro rang va than thien; issue giai thich CU THE loi nam o dau va vi sao chua dat (1-2 cau de hieu), suggestion huong dan cach sua de lam theo; KHONG dung tu ngu ky thuat (param thi goi la tham so hoac truong thong tin, CTA thi goi la nut bam, khong dung cac tu JSON, schema, tokenize, template); khong nhac ma rule trong cau chu. CHI tra ve JSON hop le dung format sau, khong kem giai thich, khong dung markdown code block:\n" +
+    "{\"violations\":[{\"rule_id\":\"A1|A2|A3|A4|A5\",\"issue\":\"...\",\"evidence\":\"...\",\"suggestion\":\"...\"}],\"tag_suggested\":\"1|2|3\"}\n" +
+    "Neu khong phat hien vi pham nao, tra ve {\"violations\":[],\"tag_suggested\":\"" + tag + "\"}.";
+
+  const userContent = "TAG DOANH NGHIEP KHAI BAO: " + tag + "\nOA ID: " + (acc.oaId || "(khong ro)") +
+    "\n\nNOI DUNG HIEN THI:\n" + contentText +
+    "\n\nBANG THONG TIN (map_info):\n" + mapText + "\n\nCAC NUT CTA:\n" + buttonText + "\n\nDANH SACH THAM SO: " + paramsList;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userContent }]
+    })
+  });
+  if (!response.ok) throw new Error("API loi: " + response.status);
+  const data = await response.json();
+  const textBlocks = (data.content || []).filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("\n");
+  const clean = textBlocks.replace(/```json|```/g, "").trim();
+  return JSON.parse(clean);
+}
+
+function escapeHtml(str) {
+  if (typeof str !== "string") return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function computeVerdict(detResults, aiViolations, hasAnyContent, aiState) {
+  if (!hasAnyContent) return { headline: "Chưa có nội dung", sub: "Dán JSON đầy đủ ở khung bên trái để bắt đầu.", cls: "verdict-neutral" };
+  const all = detResults.concat(aiViolations || []);
+  if (all.some(function (v) { return v.severity === "block"; })) return { headline: "KHÔNG ĐẠT", sub: "Cần sửa trước khi gửi duyệt.", cls: "verdict-bad" };
+  if (all.some(function (v) { return v.severity === "warn" || v.severity === "ai"; })) return { headline: "CẦN XEM LẠI", sub: "Có điểm cần lưu ý trước khi gửi duyệt.", cls: "verdict-warn" };
+  const hasWeakPass = detResults.some(function (v) { return v.severity === "weak-pass"; });
+  if (hasWeakPass && aiState !== "done") {
+    // Tín hiệu yếu (chỉ đếm số lượng tham số) KHÔNG được tự kết luận ĐẠT khi lớp AI — lớp duy
+    // nhất hiểu được tham số có thực sự là mã giao dịch hay không — chưa chạy xong hoặc bị lỗi.
+    // Đây từng là kẽ hở khiến mẫu tin lẽ ra bị từ chối vẫn hiện "hợp lệ" khi AI không kết nối được.
+    return { headline: "ĐANG CHỜ XÁC MINH", sub: "Số tham số đạt ngưỡng tối thiểu — cần AI xác minh vai trò thật.", cls: "verdict-warn" };
+  }
+  return { headline: "ĐẠT", sub: "Không phát hiện vi phạm ở các kiểm tra tự động.", cls: "verdict-ok" };
+}
+
+function buildRemediatedAcc(acc, allViolations) {
+  const stripPhrases = [];
+  const fixedItems = [];
+  const manualItems = [];
+  const seenManual = {};
+  const buttonViolationTexts = [];
+
+  function pushManual(v) {
+    const key = v.ruleId + "|" + v.title;
+    if (seenManual[key]) return;
+    seenManual[key] = true;
+    manualItems.push({ ruleId: v.ruleId, title: v.title, suggestion: v.suggestion });
+  }
+
+  allViolations.forEach(function (v) {
+    if (v.ruleId === "GEN-26" && (v.matchedText || v.detail)) {
+      // CHỈ xoá đúng số điện thoại/link (matchedText), KHÔNG xoá nguyên câu chứa nó — nếu xoá cả câu,
+      // mọi tham số <param> tình cờ nằm cùng câu (rất phổ biến, ví dụ "Chào <ten>, gọi 09xx...") sẽ
+      // bị mất theo, khiến mẫu sau khi "sửa" lại thiếu tham số định danh và bị từ chối lần nữa — đây
+      // chính là lỗi round-trip thật đã phát hiện khi thử nhập lại JSON Bước 4 vào Bước 1.
+      stripPhrases.push(v.matchedText || v.detail);
+      fixedItems.push({ ruleId: v.ruleId, note: "Đã gỡ số điện thoại/link khỏi câu, giữ lại phần nội dung còn lại (gồm tham số nếu có)." });
+    } else if (v.ruleId === "A2" && v.detail) {
+      stripPhrases.push(v.detail);
+      fixedItems.push({ ruleId: v.ruleId, note: "Đã gỡ đoạn AI cảnh báo văn phong mê tín/lừa gạt." });
+    } else if (v.ruleId === "A3" && v.detail) {
+      stripPhrases.push(v.detail);
+      fixedItems.push({ ruleId: v.ruleId, note: "Đã gỡ đoạn AI cảnh báo có ý định mời vào nhóm/cộng đồng." });
+    } else if (v.ruleId === "GEN-27" || v.ruleId === "GEN-29" || v.ruleId === "T3-02") {
+      buttonViolationTexts.push(v.detail || "");
+      fixedItems.push({ ruleId: v.ruleId, note: "Đã gỡ nút CTA vi phạm (\"" + v.title + "\") — cần bổ sung lại CTA hợp lệ." });
+    } else {
+      pushManual(v);
+    }
+  });
+
+  function cleanText(s) {
+    if (typeof s !== "string" || !s) return s;
+    let out = s;
+    stripPhrases.forEach(function (phrase) {
+      if (phrase && out.indexOf(phrase) !== -1) out = out.split(phrase).join("");
+    });
+    return out.replace(/[ \t]{2,}/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
+  }
+
+  function isButtonRemoved(b) {
+    return buttonViolationTexts.some(function (txt) {
+      if (!txt) return false;
+      if (b.link && txt.indexOf(b.link) !== -1) return true;
+      if (b.phone && txt.indexOf(String(b.phone)) !== -1) return true;
+      return false;
+    });
+  }
+
+  const newAcc = {
+    textNodes: acc.textNodes.map(function (n) { return { text: cleanText(n.text), type: n.type }; }).filter(function (n) { return n.text; }),
+    buttons: acc.buttons.filter(function (b) { return !isButtonRemoved(b); }).map(function (b) {
+      return { label: cleanText(b.label), type: b.type, action: b.action, phone: b.phone, link: b.link };
+    }),
+    mapRows: acc.mapRows.map(function (r) { return { key: cleanText(r.key), value: cleanText(r.value) }; }),
+    openUtility: acc.openUtility ? { type: acc.openUtility.type, items: acc.openUtility.items.map(function (it) {
+      return { text: cleanText(it.text), type: it.type };
+    }) } : null,
+    hasOtp: acc.hasOtp, hasStars: acc.hasStars, logo: acc.logo, oaId: acc.oaId
+  };
+
+  return { acc: newAcc, fixedItems: fixedItems, manualItems: manualItems };
+}
+
+function buildRemediatedSectionsJson(acc) {
+  const sections = [];
+  if (acc.logo) {
+    // Giữ lại đúng link ảnh/logo gốc của người dùng — JSON dự thảo chỉ sửa phần nội dung/CTA vi
+    // phạm, không có quyền và không nên tự xoá mất tài sản hình ảnh doanh nghiệp đã cung cấp.
+    sections.push({ oa_info: { show: true, img: { url: acc.logo, light: acc.logo, dark: acc.logo } } });
+  }
+  acc.textNodes.forEach(function (n) {
+    sections.push({ banner: { show: true, title: { text: n.text, type: n.type } } });
+  });
+  if (acc.mapRows.length) {
+    sections.push({ map_info: { show_all: true, items: acc.mapRows.map(function (r) {
+      return { key: { title: { text: r.key } }, value: { title: { text: r.value } } };
+    }) } });
+  }
+  if (acc.openUtility) {
+    sections.push({ open_utility: { type: acc.openUtility.type, top: { contents: { items: acc.openUtility.items } } } });
+  }
+  if (acc.buttons.length) {
+    sections.push({ buttons: { show_all: true, items: acc.buttons.map(function (b) {
+      return { text: b.label, type: b.type, click: { action: b.action, data: b.link || b.phone || "" } };
+    }) } });
+  }
+  return { oa_id: acc.oaId, sections: sections };
+}
+
+/* =====================================================================================
+ * PHẦN GẮN UI THẬT (DOM refs theo đúng id trong file UI/UX do bạn cung cấp)
+ * ===================================================================================== */
+
+
+
+/* ===== GIỚI HẠN KÝ TỰ THEO THAM SỐ (zbs_rule_map_v2 — mục III) ===== */
+var PARAM_LIMITS = {
+  customer_name: 30, ten_khach_hang: 30, ten_kh: 30,
+  phone_number: 15, sdt: 15, so_dien_thoai: 15,
+  address: 80, dia_chi: 80,
+  product_code: 30, ma_san_pham: 30, ma_don_hang: 30, order_code: 30,
+  ma_khach_hang: 30, customer_code: 30, ma_hop_dong: 30, contract_number: 30, contract_code: 30,
+  custom_field: 30, ma_voucher: 30, voucher_code: 30, hinh_thuc_thanh_toan: 30,
+  transaction_status: 30, trang_thai: 30,
+  contact: 50, lien_he: 50,
+  personal_title: 5, danh_xung: 5, xung_ho: 5, gender: 5,
+  product_name: 100, ten_san_pham: 100, thuong_hieu: 100, topic_khao_sat: 100,
+  amount_in_standard: 20, amount: 20, price: 20, gia_tien: 20, so_tien: 20, money: 20, diem: 20, total_rev: 20, cash_rev: 20, bank_rev: 20,
+  time: 20, datetime: 20, ngay: 20, ngay_mua_hang: 20, ngay_giao_dich: 20, han_su_dung: 20, thang: 20, month: 20, month_year: 20, date: 20,
+  bank_transfer_note: 90
+};
+var VALUE_MAX = 100;   // map_info value mặc định khi không nhận diện được param
+function paramNameIn(v) { var m = String(v || "").match(/<([a-zA-Z0-9_]+)>/); return m ? m[1].toLowerCase() : null; }
+function dataLimitFor(v) { var p = paramNameIn(v); if (p && PARAM_LIMITS[p] != null) return PARAM_LIMITS[p]; return VALUE_MAX; }
+/* maxlength không bao giờ cắt token <param> hợp lệ — chỉ chặn dữ liệu thật vượt giới hạn */
+function valFieldLimit(v) { return Math.max(dataLimitFor(v), String(v || "").length); }
+function valTooltip(v) {
+  var p = paramNameIn(v);
+  return (p && PARAM_LIMITS[p] != null)
+    ? ("Dữ liệu tối đa " + PARAM_LIMITS[p] + " ký tự (tham số " + p + ")")
+    : ("Tối đa " + VALUE_MAX + " ký tự");
+}
+/* maxlength động cho ô GIÁ TRỊ + bộ đếm ký tự được xử lý ở COUNTERS_JS */
+
+
+/* ===== BUILDER ORCHESTRATION ===== */
+var TYPES = [
+  { id: "custom",  label: "Tuỳ chỉnh",      sub: "Mặc định",  hasLogo: true,  hasMapImage: true,  hasMapInfo: true,  hasUtility: false, hasRating: false },
+  { id: "otp",     label: "Xác thực",       sub: "Mã OTP",    hasLogo: true,  hasMapImage: false, hasMapInfo: false, hasUtility: false, hasRating: false },
+  { id: "rating",  label: "Đánh giá",       sub: "Chọn sao",  hasLogo: true,  hasMapImage: false, hasMapInfo: true,  hasUtility: false, hasRating: true  },
+  { id: "payment", label: "Yêu cầu chi trả", sub: "Hoá đơn",  hasLogo: true,  hasMapImage: false, hasMapInfo: true,  hasUtility: true,  hasRating: false },
+  { id: "voucher", label: "Voucher",        sub: "Ưu đãi",    hasLogo: true,  hasMapImage: false, hasMapInfo: true,  hasUtility: true,  hasRating: false }
+];
+var TAGS = [
+  { id: "1", label: "Cấp độ 1 — Giao dịch", sub: "Xác minh, số dư, đóng cước" },
+  { id: "2", label: "Cấp độ 2 — Chăm sóc",  sub: "Đăng ký thành viên, sinh nhật" },
+  { id: "3", label: "Cấp độ 3 — Hậu mãi",   sub: "Ưu đãi đặc thù, tặng voucher" }
+];
+
+/* ---------- Central form state ---------- */
+var S = {
+  oaId: "",
+  type: "custom",
+  tag: "1",                 // NẰM NGOÀI JSON — chỉ truyền vào engine khi kiểm duyệt
+  media: "oa_info",         // 'oa_info' | 'map_image' (loại trừ nhau)
+  logoLight: "",
+  logoDark: "",
+  mapImage: "",
+  title: "",
+  body: "",
+  mapRows: [],
+  ou1: "", ou2: "",
+  ctas: []
+};
+
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function typeMeta() { return TYPES.filter(function (t) { return t.id === S.type; })[0]; }
+
+/* ======================= BUILD SECTIONS (engine-compatible, NO tag) ======================= */
+/* Khớp đúng schema Image 1: root chỉ gồm oa_id, extend_info, extend_footers, footer, 3rd_info,
+   3rd_config, sections[]. KHÔNG có trường tag — tag được giữ riêng ở S.tag (ngoài JSON). */
+function wrapParams(text) {
+  // bọc <param> bằng span.param giống dump thật của Zalo để engine nhận diện tham số chuẩn xác
+  return esc(text).replace(/&lt;([^&]+?)&gt;/g, '<span class="param">&lt;$1&gt;</span>');
+}
+function buildSections() {
+  var m = typeMeta();
+  var sections = [];
+
+  // oa_info hoặc map_image (loại trừ nhau)
+  if (S.media === "oa_info" && m.hasLogo && S.logoLight.trim()) {
+    sections.push({ oa_info: { show: true, vertical: true, horizontal: false, pos: "1",
+      img: { url: S.logoLight.trim(), light: S.logoLight.trim(), dark: (S.logoDark.trim() || S.logoLight.trim()) } } });
+  } else if (S.media === "map_image" && m.hasMapImage && S.mapImage.trim()) {
+    sections.push({ map_image: { show: true, items: [{ img: { url: S.mapImage.trim() }, click: { action: "action.open.inapp", data: "" } }] } });
+  }
+
+  // banner: title + body
+  if (S.title.trim()) sections.push({ banner: { show: true, title: { text: S.title.trim(), type: "text-title" } } });
+  if (S.body.trim())  sections.push({ banner: { show: true, title: { text: S.body.trim(), type: S.type === "otp" ? "text-otp-blue" : "text-normal" } } });
+
+  // map_info table
+  var rows = S.mapRows.filter(function (r) { return (r.k && r.k.trim()) || (r.v && r.v.trim()); });
+  if (m.hasMapInfo && rows.length) {
+    sections.push({ map_info: { show_all: true, items: rows.map(function (r) {
+      return { key: { title: { text: r.k.trim() } }, value: { title: { text: r.v.trim() } } };
+    }) } });
+  }
+
+  // open_utility (voucher / payment)
+  if (m.hasUtility && (S.ou1.trim() || S.ou2.trim())) {
+    sections.push({ open_utility: { type: S.type, top: { contents: { items: [
+      { text: S.ou1.trim(), type: "highlight" }, { text: S.ou2.trim(), type: "code" }
+    ] } } } });
+  }
+
+  // rating
+  if (m.hasRating) sections.push({ rating: { show: true, star: 5 } });
+
+  // buttons (CTA, tối đa 3)
+  var ctas = S.ctas.filter(function (c) { return c.label && c.label.trim(); });
+  if (ctas.length) {
+    sections.push({ buttons: { show_all: true, items: ctas.slice(0, 3).map(function (c) {
+      var action = c.kind === "phone" ? "action.open.phone" : "action.open.inapp";
+      var data = c.kind === "phone" ? JSON.stringify({ phoneCode: c.data }) : c.data;
+      return { text: c.label.trim(), type: c.style || "button-primary", click: { action: action, data: data } };
+    }) } });
+  }
+
+  // 3rd_info / 3rd_config: JSON-string chỉ với Voucher & Payment (theo Image 1)
+  var thirdInfo = null, thirdConfig = null;
+  if (S.type === "voucher" || S.type === "payment") {
+    thirdInfo = JSON.stringify({ type: S.type });
+  }
+
+  return {
+    oa_id: S.oaId.trim(),
+    extend_info: S.oaId.trim(),
+    extend_footers: null,
+    footer: null,
+    "3rd_info": thirdInfo,
+    "3rd_config": thirdConfig,
+    sections: sections
+  };
+}
+
+/* ======================= LIVE JSON PANEL ======================= */
+function refreshJson() {
+  $("json-output").textContent = JSON.stringify(buildSections(), null, 2);
+}
+
+/* ======================= ZALO PREVIEW (real-time) ======================= */
+function paramChip(text) {
+  // render <param> trong preview thành chip mờ để giống Zalo hiển thị biến chưa đổ dữ liệu
+  return esc(text).replace(/&lt;([^&]+?)&gt;/g, '<span class="text-slate-400 font-semibold">&lt;$1&gt;</span>');
+}
+function renderPreview() {
+  var m = typeMeta();
+  var html = "";
+
+  // logo / ảnh slider
+  if (S.media === "oa_info" && m.hasLogo && S.logoLight.trim()) {
+    html += '<div class="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">' +
+      '<img src="' + esc(S.logoLight.trim()) + '" alt="logo" class="h-6 object-contain" onerror="this.style.display=\'none\'">' +
+      '<span class="text-[11px] font-bold text-slate-400">OA chính thức</span></div>';
+  } else if (S.media === "map_image" && m.hasMapImage && S.mapImage.trim()) {
+    html += '<img src="' + esc(S.mapImage.trim()) + '" alt="banner" class="w-full h-28 object-cover rounded-xl mb-3" onerror="this.style.display=\'none\'">';
+  }
+
+  // title
+  if (S.title.trim()) html += '<div class="text-[13px] font-extrabold text-slate-900 mb-2 leading-snug break-words">' + paramChip(S.title.trim()) + '</div>';
+
+  // body
+  if (S.body.trim()) {
+    if (S.type === "otp" && S.body.trim().length <= 24 && !/\s/.test(S.body.trim().replace(/<[^>]+>/g, "").trim())) {
+      html += '<div class="my-3 flex justify-center"><div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-2.5 text-xl font-extrabold tracking-[0.25em] zbs-blue text-center break-all">' + paramChip(S.body.trim()) + '</div></div>';
+    } else {
+      html += '<div class="text-[12px] text-slate-600 leading-relaxed mb-3 whitespace-pre-line break-words">' + paramChip(S.body.trim()) + '</div>';
+    }
+  }
+
+  // map_info
+  var rows = S.mapRows.filter(function (r) { return (r.k && r.k.trim()) || (r.v && r.v.trim()); });
+  if (m.hasMapInfo && rows.length) {
+    html += '<div class="border-t border-slate-100 pt-3 mt-1 flex flex-col gap-1.5">';
+    rows.forEach(function (r) {
+      html += '<div class="flex justify-between gap-3 text-[11px]">' +
+        '<span class="text-slate-400 font-medium shrink-0 break-words">' + paramChip(r.k.trim()) + '</span>' +
+        '<span class="text-slate-800 font-bold text-right break-words min-w-0">' + paramChip(r.v.trim()) + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // open_utility (voucher / payment highlight box)
+  if (m.hasUtility && (S.ou1.trim() || S.ou2.trim())) {
+    if (S.type === "voucher") {
+      html += '<div class="mt-3 rounded-xl border border-dashed border-purple-200 bg-purple-50/50 p-3 text-center">' +
+        '<div class="text-[12px] font-extrabold text-purple-700 mb-1">' + paramChip(S.ou1.trim() || "ƯU ĐÃI") + '</div>' +
+        '<div class="inline-block bg-white border border-purple-200 rounded-lg px-3 py-1 text-[12px] font-black tracking-wider text-purple-800 mono break-all max-w-full">' + paramChip(S.ou2.trim() || "VOUCHERCODE") + '</div>' +
+        '<div class="text-[9px] text-slate-400 font-medium mt-1.5">Hạn dùng áp dụng theo cổng đối tác</div></div>';
+    } else {
+      html += '<div class="mt-3 rounded-xl border border-blue-100 bg-blue-50/50 p-3">' +
+        '<div class="text-[9px] font-extrabold uppercase tracking-wider zbs-blue mb-1">Chi tiết cần thanh toán</div>' +
+        '<div class="text-lg font-black text-slate-900 break-words">' + paramChip(S.ou1.trim() || "<amount>") + '</div>' +
+        '<div class="text-[10px] text-slate-500 font-medium mt-0.5 break-words">' + paramChip(S.ou2.trim() || "Ngân hàng thụ hưởng") + '</div></div>';
+    }
+  }
+
+  // rating stars
+  if (m.hasRating) {
+    html += '<div class="mt-3 flex justify-center gap-1.5 border-t border-slate-100 pt-3">';
+    for (var i = 0; i < 5; i++) html += '<svg class="w-6 h-6 text-amber-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>';
+    html += '</div>';
+  }
+
+  // buttons
+  var ctas = S.ctas.filter(function (c) { return c.label && c.label.trim(); });
+  if (ctas.length) {
+    html += '<div class="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3">';
+    ctas.slice(0, 3).forEach(function (c) {
+      var primary = (c.style || "button-primary") === "button-primary";
+      html += '<div class="text-center text-[12px] font-bold py-2 rounded-xl ' +
+        (primary ? 'bg-zbs text-white' : 'border border-blue-200 zbs-blue bg-white') + '">' + esc(c.label.trim()) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  if (!html) html = '<div class="flex flex-col items-center justify-center text-center py-10 gap-3">' + '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/3840px-Icon_of_Zalo.svg.png" alt="Zalo" class="h-9 w-auto object-contain">' + '<div class="text-[15px] font-extrabold text-slate-800">Xin chào!</div>' + '<div class="text-[10px] text-slate-400 font-medium leading-snug px-3">Nhập thông tin bên trái để xem trước mẫu tin Zalo tại đây.</div>' + '</div>';
+  $("prev-card").innerHTML = html;
+}
+
+/* ======================= one-shot refresh ======================= */
+function refreshAll() { renderPreview(); refreshJson(); updateSubmitEnabled(); }
+
+/* ======================= TYPE / TAG / MEDIA chips ======================= */
+function renderTypeChips() {
+  $("f-type-grid").innerHTML = TYPES.map(function (t) {
+    var on = t.id === S.type;
+    return '<button data-type="' + t.id + '" class="type-chip text-center px-2 py-2.5 rounded-xl border transition-all cursor-pointer ' +
+      (on ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-500/15' : 'border-slate-200 bg-white hover:border-slate-300') + '">' +
+      '<div class="text-[12px] font-extrabold ' + (on ? 'zbs-blue' : 'text-slate-700') + '">' + t.label + '</div>' +
+      '<div class="text-[9px] text-slate-400 font-medium mt-0.5">' + t.sub + '</div></button>';
+  }).join("");
+}
+function renderTagChips() {
+  $("f-tag-grid").innerHTML = TAGS.map(function (t) {
+    var on = t.id === S.tag;
+    return '<button data-tag="' + t.id + '" class="tag-chip text-left px-3.5 py-3 rounded-xl border transition-all cursor-pointer ' +
+      (on ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-500/15' : 'border-slate-200 bg-white hover:border-slate-300') + '">' +
+      '<div class="text-[12px] font-extrabold ' + (on ? 'zbs-blue' : 'text-slate-700') + '">' + t.label + '</div>' +
+      '<div class="text-[10px] text-slate-400 font-medium mt-0.5">' + t.sub + '</div></button>';
+  }).join("");
+}
+function syncMediaToggle() {
+  var m = typeMeta();
+  // map_image chỉ khả dụng cho mẫu Tuỳ chỉnh; nếu loại khác -> ép về oa_info
+  if (!m.hasMapImage && S.media === "map_image") S.media = "oa_info";
+  document.querySelectorAll(".media-toggle").forEach(function (b) {
+    var on = b.getAttribute("data-media") === S.media;
+    b.className = "media-toggle px-2.5 py-1 rounded-lg transition-all " + (on ? "bg-white text-slate-900 shadow-sm" : "text-slate-500");
+    if (b.getAttribute("data-media") === "map_image") b.style.display = m.hasMapImage ? "" : "none";
+  });
+  $("block-oa-info").classList.toggle("hidden", !(S.media === "oa_info" && m.hasLogo));
+  $("block-map-image").classList.toggle("hidden", !(S.media === "map_image" && m.hasMapImage));
+  // ẩn cả khu media nếu loại mẫu không có logo lẫn ảnh
+  $("block-oa-info").parentElement.style.display = (m.hasLogo || m.hasMapImage) ? "" : "none";
+}
+function syncTypeDependentBlocks() {
+  var m = typeMeta();
+  $("block-open-utility").classList.toggle("hidden", !m.hasUtility);
+  $("block-rating").classList.toggle("hidden", !m.hasRating);
+  $("map-rows").parentElement.style.display = m.hasMapInfo ? "" : "none";
+  if (m.hasUtility) {
+    $("ou-title").textContent = S.type === "voucher" ? "Chi tiết voucher / quà tặng" : "Chi tiết yêu cầu thanh toán";
+    $("ou-label-1").textContent = S.type === "voucher" ? "Giá trị ưu đãi" : "Số tiền cần thanh toán";
+    $("ou-label-2").textContent = S.type === "voucher" ? "Mã code ưu đãi" : "Ngân hàng / số tài khoản";
+    $("f-ou-1").placeholder = S.type === "voucher" ? "VD: GIẢM 50.000đ" : "VD: <price>đ";
+    $("f-ou-2").placeholder = S.type === "voucher" ? "VD: CODESIEUCONG" : "VD: BIDV - 27878051512";
+    $("f-ou-1").maxLength = S.type === "voucher" ? 100 : 20;
+    $("f-ou-2").maxLength = S.type === "voucher" ? 30 : 90;
+  }
+  syncMediaToggle();
+}
+
+/* ======================= map_info rows ======================= */
+function renderRows() {
+  $("map-rows").innerHTML = S.mapRows.map(function (r, i) {
+    return '<div class="flex items-center gap-2" data-row="' + i + '">' +
+      '<input data-rk="' + i + '" maxlength="30" value="' + esc(r.k) + '" placeholder="Nhãn (VD: Khách hàng)" class="row-input flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition">' +
+      '<input data-rv="' + i + '" maxlength="' + dataLimitFor(r.v) + '" title="' + esc(valTooltip(r.v)) + '" value="' + esc(r.v) + '" placeholder="Giá trị (VD: <customer_name>)" class="row-input flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition">' +
+      '<button data-del-row="' + i + '" class="w-8 h-8 shrink-0 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>' +
+      '</div>';
+  }).join("");
+}
+
+/* ======================= CTA cards ======================= */
+function renderCtas() {
+  $("cta-list").innerHTML = S.ctas.map(function (c, i) {
+    return '<div class="rounded-2xl border border-slate-200 p-4" data-cta="' + i + '">' +
+      '<div class="flex items-center justify-between mb-3">' +
+        '<span class="text-[11px] font-extrabold text-slate-700 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>Nút tương tác ' + (i + 1) + '</span>' +
+        '<button data-del-cta="' + i + '" class="text-[11px] font-bold text-rose-500 hover:text-rose-600 transition">Xóa nút</button>' +
+      '</div>' +
+      '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">' +
+        '<input data-cta-label="' + i + '" maxlength="30" value="' + esc(c.label) + '" placeholder="Tên nhãn nút *" class="cta-input bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition">' +
+        '<select data-cta-kind="' + i + '" class="cta-input bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition cursor-pointer">' +
+          '<option value="link"' + (c.kind === "link" ? " selected" : "") + '>Mở liên kết (URL)</option>' +
+          '<option value="phone"' + (c.kind === "phone" ? " selected" : "") + '>Gọi điện (Hotline)</option>' +
+        '</select>' +
+        '<input data-cta-data="' + i + '" maxlength="200" value="' + esc(c.data) + '" placeholder="' + (c.kind === "phone" ? "1900xxxx" : "https://...") + '" class="cta-input bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition">' +
+      '</div>' +
+      '<div class="flex items-center gap-1 mt-2.5 text-[11px] font-bold">' +
+        '<span class="text-slate-400 mr-1">Kiểu:</span>' +
+        '<button data-cta-style="' + i + '" data-style="button-primary" class="px-2.5 py-1 rounded-lg transition ' + ((c.style || "button-primary") === "button-primary" ? "bg-blue-50 zbs-blue" : "text-slate-400 hover:bg-slate-100") + '">Xanh nổi</button>' +
+        '<button data-cta-style="' + i + '" data-style="button-neutral" class="px-2.5 py-1 rounded-lg transition ' + (c.style === "button-neutral" ? "bg-blue-50 zbs-blue" : "text-slate-400 hover:bg-slate-100") + '">Viền xanh</button>' +
+      '</div>' +
+      '</div>';
+  }).join("");
+  $("btn-add-cta").style.display = S.ctas.length >= 3 ? "none" : "";
+}
+
+/* ======================= submit gating ======================= */
+function updateSubmitEnabled() {
+  var ok = $("f-agree").checked;
+  $("btn-submit").disabled = !ok;
+  $("submit-hint").style.display = ok ? "none" : "";
+}
+
+/* ======================= TAB / STEP navigation ======================= */
+function showTab(n) {
+  [1, 2, 3].forEach(function (i) {
+    var panel = document.querySelector('[data-panel="' + i + '"]');
+    panel.classList.toggle("hidden", i !== n);
+    if (i === n) { panel.classList.add("flex"); } else { panel.classList.remove("flex"); }
+    var trig = document.querySelector('.tab-trigger[data-tab="' + i + '"]');
+    var on = i === n;
+    trig.className = "tab-trigger border rounded-xl px-3 py-2.5 text-left transition-all cursor-pointer " + (on ? "tab-active" : "tab-idle");
+    trig.querySelector("div").className = "text-xs flex items-center gap-1.5 " + (on ? "font-extrabold text-white" : "font-semibold text-slate-500");
+  });
+}
+
+/* ======================= SCENARIOS ======================= */
+var SCENARIOS = [
+  { name: "Cước Viễn Thông — VNTT", tone: "ok", desc: "Mẫu báo cước trả sau, đủ mã định danh, link Payment hợp lệ.",
+    apply: function () {
+      S.type = "payment"; S.tag = "1"; S.media = "oa_info";
+      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
+      S.title = "Thông báo Cước dịch vụ viễn thông";
+      S.body = "Xin trân trọng cảm ơn Quý khách <customer_name> đã tin dùng VNTT. Chúng tôi xin gửi thông báo chi tiết cước dịch vụ viễn thông đến kỳ hạn thanh toán mới nhất:";
+      S.mapRows = [ {k:"Khách hàng",v:"<customer_name>"}, {k:"Mã hợp đồng",v:"<contract_number>"}, {k:"Số tiền cước",v:"<price>"}, {k:"Kỳ thanh toán",v:"Tháng <month>"} ];
+      S.ou1 = "<price>đ"; S.ou2 = "BIDV - CN Bình Dương · TK: 27878051512 · CÔNG TY CP VIỄN THÔNG VNTT";
+      S.ctas = [ {label:"Thanh toán cước ngay",kind:"link",data:"https://vntt.com.vn/pay",style:"button-primary"}, {label:"Báo cáo chi tiết",kind:"link",data:"https://vntt.com.vn/tra-cuu",style:"button-neutral"} ];
+    } },
+  { name: "Mã xác thực OTP — RentA", tone: "ok", desc: "Gửi mã OTP xác nhận tài khoản, bố cục tối giản, bảo mật cao.",
+    apply: function () {
+      S.type = "otp"; S.tag = "1"; S.media = "oa_info";
+      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
+      S.title = "Mã xác thực tài khoản RentA";
+      S.body = "<otp_code>";
+      S.mapRows = []; S.ou1 = ""; S.ou2 = "";
+      S.ctas = [];
+    } },
+  { name: "Báo cáo Toyota", tone: "warn", desc: "Đưa SĐT trực tiếp vào nội dung thay vì nút CTA, thiếu mã giao dịch.",
+    apply: function () {
+      S.type = "custom"; S.tag = "2"; S.media = "oa_info";
+      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
+      S.title = "Thông báo thay đổi nhân sự phụ trách";
+      S.body = "Xin chào <customer_name>, Toyota Bình Dương xin thông báo nhân viên phụ trách đã ngừng công tác. Liên hệ hotline 0901234567 để được hỗ trợ.";
+      S.mapRows = [ {k:"Khách hàng",v:"<customer_name>"}, {k:"Hotline",v:"0901234567"} ];
+      S.ou1 = ""; S.ou2 = ""; S.ctas = [];
+    } },
+  { name: "Báo cáo Fastie", tone: "warn", desc: "Chỉ có tên + số liệu doanh thu, thiếu mã định danh giao dịch.",
+    apply: function () {
+      S.type = "custom"; S.tag = "2"; S.media = "oa_info";
+      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
+      S.title = "Báo cáo số liệu kinh doanh định kỳ";
+      S.body = "Kính gửi Quý khách <owner_hkd>, Fastie gửi bảng tổng hợp số liệu kinh doanh tháng <month_year> từ Hộ kinh doanh <name_hkd>.";
+      S.mapRows = [ {k:"Doanh thu tiền mặt",v:"<cash_rev>"}, {k:"Doanh thu chuyển khoản",v:"<bank_rev>"}, {k:"Tổng doanh thu",v:"<total_rev>"} ];
+      S.ou1 = ""; S.ou2 = ""; S.ctas = [ {label:"Xem báo cáo",kind:"link",data:"https://fastie.vn/report",style:"button-primary"} ];
+    } },
+  { name: "Khuyến mãi PJP", tone: "danger", desc: "Dùng link điều hướng nhóm/cộng đồng — vi phạm nghiêm trọng.",
+    apply: function () {
+      S.type = "voucher"; S.tag = "3"; S.media = "oa_info";
+      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
+      S.title = "Ưu đãi thành viên PJP";
+      S.body = "Chào <customer_name>, tham gia cộng đồng PJP để nhận ưu đãi độc quyền dành riêng cho thành viên!";
+      S.mapRows = [ {k:"Khách hàng",v:"<customer_name>"} ];
+      S.ou1 = "ƯU ĐÃI TẶNG 50K"; S.ou2 = "PJPMEMBER";
+      S.ctas = [ {label:"Bấm vào đây để tham gia",kind:"link",data:"https://post.oa.zalo.me/d?id=abc&pageId=123",style:"button-primary"} ];
+    } }
+];
+var selectedScenario = null;
+function renderScenarios() {
+  var toneCls = { ok: "text-emerald-600 bg-emerald-50 border-emerald-100", warn: "text-amber-600 bg-amber-50 border-amber-100", danger: "text-rose-600 bg-rose-50 border-rose-100" };
+  var toneLabel = { ok: "Hợp lệ", warn: "Cảnh báo", danger: "Vi phạm" };
+  $("scenarios-grid").innerHTML = SCENARIOS.map(function (sc, i) {
+    var on = selectedScenario === i;
+    var base = "group text-left rounded-2xl border p-3.5 transition-all cursor-pointer active:scale-[0.98] ";
+    var stcls = on
+      ? "border-blue-400 bg-blue-50/60 shadow-md ring-1 ring-blue-500/20 -translate-y-0.5"
+      : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-md hover:-translate-y-0.5";
+    var nameCls = "text-[12px] font-extrabold leading-tight transition-colors " + (on ? "zbs-blue" : "text-slate-800 group-hover:text-[#0068FF]");
+    return '<button data-scenario="' + i + '" class="' + base + stcls + '">' +
+      '<div class="flex items-center justify-between gap-2 mb-1.5">' +
+        '<span class="' + nameCls + '">' + sc.name + '</span>' +
+        '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border shrink-0 ' + toneCls[sc.tone] + '">' + toneLabel[sc.tone] + '</span>' +
+      '</div>' +
+      '<p class="text-[10px] font-medium leading-snug ' + (on ? "text-slate-500" : "text-slate-400") + '">' + sc.desc + '</p></button>';
+  }).join("");
+}
+
+/* ======================= SUBMIT FLOW ======================= */
+var lastResults = null;       // giữ kết quả để nút "tiếp tục" và "quay về" dùng chung
+function openModal(id) {
+  var m = $(id); m.classList.remove("hidden");
+  requestAnimationFrame(function () {
+    m.classList.remove("opacity-0");
+    m.querySelector("[data-modal-card]").classList.remove("opacity-0", "scale-95");
+  });
+}
+function closeModal(id) {
+  var m = $(id);
+  m.classList.add("opacity-0");
+  m.querySelector("[data-modal-card]").classList.add("opacity-0", "scale-95");
+  setTimeout(function () { m.classList.add("hidden"); }, 220);
+}
+function setStep(n) {
+  [1, 2, 3].forEach(function (i) {
+    var dot = $("step-dot-" + i), lab = $("step-label-" + i);
+    dot.className = "w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold transition-all " +
+      (i < n ? "step-dot-done" : i === n ? "step-dot-active" : "step-dot-idle");
+    lab.className = "text-xs font-bold hidden sm:inline " + (i <= n ? "text-slate-900" : "text-slate-400");
+  });
+}
+
+/* Map mỗi vi phạm -> field DOM để bôi đỏ khi user quay về sửa */
+function fieldsForViolation(v) {
+  var ids = [];
+  var rid = v.ruleId || "";
+  if (/GEN-2[1235]/.test(rid) || rid === "GEN-25") { ids.push("f-body"); ids.push("f-title"); }       // tham số sai định dạng
+  if (/GEN-26/.test(rid)) { ids.push("f-body"); }                                                     // SĐT/link trong nội dung
+  if (/T1-03|T1-02|T2-02|T3-06|T2-06/.test(rid)) { ids.push("f-body"); document.querySelectorAll('[data-rk]').forEach(function(e){ids.push(e);}); document.querySelectorAll('[data-rv]').forEach(function(e){ids.push(e);}); }
+  if (/GEN-27|GEN-29/.test(rid)) { document.querySelectorAll('[data-cta-data]').forEach(function(e){ids.push(e);}); }
+  return ids;
+}
+function clearFlags() {
+  document.querySelectorAll(".field-flagged").forEach(function (e) { e.classList.remove("field-flagged"); });
+}
+function flagViolatingFields(violations) {
+  clearFlags();
+  violations.forEach(function (v) {
+    fieldsForViolation(v).forEach(function (ref) {
+      var el = typeof ref === "string" ? $(ref) : ref;
+      if (el) el.classList.add("field-flagged");
+    });
+  });
+}
+
+function runSubmit() {
+  setStep(2);
+  openModal("modal-reviewing");
+
+  var tpl = buildSections();
+  var rec = detectAndRecover(JSON.stringify(tpl));
+  var acc = normalizeTemplate(rec.sections, tpl.oa_id);
+  // lớp xác định (engine) + lớp quy tắc mở rộng theo dữ liệu biểu mẫu
+  var det = runDeterministicChecks(acc, S.tag).concat(extraFormChecks(acc, S.tag));
+  var started = Date.now();
+
+  function finish(aiViolations) {
+    var all = det.concat(aiViolations || []);
+    var verdict = computeVerdict(det, aiViolations || [], true, aiViolations ? "done" : "idle");
+    var wait = Math.max(0, 1100 - (Date.now() - started));
+    setTimeout(function () {
+      closeModal("modal-reviewing");
+      setTimeout(function () { showResults(all, verdict); }, 240);
+    }, wait);
+  }
+
+  // lớp ngữ nghĩa AI: chạy khi khả dụng (Claude.ai), tự suy biến về kết quả xác định nếu lỗi/offline
+  if (typeof runAiCheck === "function") {
+    var done = false;
+    var to = setTimeout(function () { if (!done) { done = true; finish(null); } }, 9000);
+    runAiCheck(acc, S.tag).then(function (aiData) {
+      if (done) return; done = true; clearTimeout(to);
+      var av = (aiData && aiData.violations) ? aiData.violations.map(function (v) {
+        return { ruleId: v.rule_id, severity: "warn", title: v.issue, detail: v.evidence, suggestion: v.suggestion };
+      }) : [];
+      if (aiData && aiData.tag_suggested && String(aiData.tag_suggested) !== String(S.tag)) {
+        av.push({ ruleId: "TAG", severity: "warn", title: "AI đề xuất Tag " + aiData.tag_suggested + " (bạn đang khai Tag " + S.tag + ")", suggestion: "Cân nhắc đổi mục đích gửi tin cho khớp nội dung." });
+      }
+      finish(av);
+    }).catch(function () { if (done) return; done = true; clearTimeout(to); finish(null); });
+  } else { finish(null); }
+}
+
+function showResults(det, verdict) {
+  var blocks = det.filter(function (v) { return v.severity === "block"; });
+  var warns = det.filter(function (v) { return v.severity === "warn" || v.severity === "weak-pass"; });
+  lastResults = { det: det, verdict: verdict, blocks: blocks, warns: warns };
+
+  var headColor, iconSvg, title, sub, iconWrap;
+  if (blocks.length) {
+    headColor = "bg-rose-500"; iconWrap = "bg-white/20 text-white";
+    title = "Phát hiện điểm vi phạm"; sub = "Mẫu có lỗi cần xử lý trước khi gửi duyệt";
+    iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.5 0L3.18 16.25A2 2 0 005 19z"/></svg>';
+  } else if (warns.length) {
+    headColor = "bg-amber-500"; iconWrap = "bg-white/20 text-white";
+    title = "Cần xem lại vài điểm"; sub = "Mẫu có cảnh báo nên kiểm tra trước khi gửi";
+    iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+  } else {
+    headColor = "bg-emerald-500"; iconWrap = "bg-white/20 text-white";
+    title = "Mẫu đạt sơ bộ"; sub = "Không phát hiện vi phạm ở lớp kiểm tra tự động";
+    iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+  }
+  var head = $("results-head");
+  head.className = "px-6 py-5 shrink-0 text-white " + headColor;
+  $("results-icon").className = "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 " + iconWrap;
+  $("results-icon").innerHTML = iconSvg;
+  $("results-title").textContent = title;
+  $("results-sub").textContent = sub;
+
+  var items = blocks.concat(warns);
+  if (!items.length) {
+    $("results-list").innerHTML = '<div class="flex items-center gap-2.5 text-emerald-700 font-bold text-xs p-4 bg-emerald-50 rounded-2xl border border-emerald-100">' +
+      '<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4"/></svg>' +
+      'Mẫu tin sạch — sẵn sàng chuyển hàng đợi kiểm định ZBS.</div>';
+  } else {
+    $("results-list").innerHTML = items.map(function (v) {
+      var isBlock = v.severity === "block";
+      var c = isBlock ? "rose" : "amber";
+      return '<div class="rounded-2xl border border-' + c + '-100 bg-' + c + '-50/50 p-4">' +
+        '<div class="flex items-start gap-2.5">' +
+          '<svg class="w-4 h-4 text-' + c + '-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" opacity="0.15"/><path d="M12 7v6m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>' +
+          '<div class="min-w-0">' +
+            '<div class="flex items-center gap-2 mb-1">' +
+              '<span title="' + esc(v.ruleId || "") + '" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-' + c + '-100 text-' + c + '-700">' + esc(friendlyRule(v.ruleId)) + '</span>' +
+              '<span class="text-[9px] font-extrabold uppercase text-' + c + '-600">' + (isBlock ? "Vi phạm" : "Cảnh báo") + '</span>' +
+            '</div>' +
+            '<div class="text-[12px] font-bold text-slate-800 leading-snug">' + esc(v.title || "") + '</div>' +
+            (v.detail ? '<div class="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">' + esc(v.detail) + '</div>' : '') +
+            (v.suggestion ? '<div class="text-[11px] zbs-blue font-semibold mt-1.5 leading-relaxed">→ ' + esc(v.suggestion) + '</div>' : '') +
+          '</div></div></div>';
+    }).join("");
+  }
+
+  var note = $("results-warn-note");
+  if (blocks.length) {
+    note.classList.remove("hidden");
+    note.textContent = "Doanh nghiệp vẫn có thể bấm tiếp tục gửi, nhưng mẫu có tỷ lệ rất cao bị hệ thống ZBS từ chối. Khuyến nghị quay về chỉnh sửa các ô đã được tô đỏ.";
+  } else { note.classList.add("hidden"); }
+
+  openModal("modal-results");
+}
+
+/* ======================= BOOT ======================= */
+function boot() {
+  renderScenarios();
+  renderTypeChips();
+  renderTagChips();
+  $("f-oaid").value = S.oaId;
+  $("f-title").value = S.title;
+  $("f-body").value = S.body;
+  $("f-body-count").textContent = S.body.length + "/400 ký tự";
+  renderRows();
+  renderCtas();
+  syncTypeDependentBlocks();
+  showTab(1);
+  setStep(1);
+  refreshAll();
+}
+
+/* ======================= EVENT WIRING ======================= */
+document.addEventListener("input", function (e) {
+  var t = e.target;
+  if (t.id === "f-oaid") { S.oaId = t.value; refreshAll(); }
+  else if (t.id === "f-title") { S.title = t.value; refreshAll(); }
+  else if (t.id === "f-body") { S.body = t.value; $("f-body-count").textContent = t.value.length + "/400 ký tự"; $("tab2-dot").classList.toggle("hidden", !t.value); refreshAll(); }
+  else if (t.id === "f-logo-light") { S.logoLight = t.value; refreshAll(); }
+  else if (t.id === "f-logo-dark") { S.logoDark = t.value; refreshAll(); }
+  else if (t.id === "f-map-image") { S.mapImage = t.value; refreshAll(); }
+  else if (t.id === "f-ou-1") { S.ou1 = t.value; refreshAll(); }
+  else if (t.id === "f-ou-2") { S.ou2 = t.value; refreshAll(); }
+  else if (t.hasAttribute("data-rk")) { S.mapRows[+t.getAttribute("data-rk")].k = t.value; refreshAll(); }
+  else if (t.hasAttribute("data-rv")) { S.mapRows[+t.getAttribute("data-rv")].v = t.value; refreshAll(); }
+  else if (t.hasAttribute("data-cta-label")) { S.ctas[+t.getAttribute("data-cta-label")].label = t.value; refreshAll(); }
+  else if (t.hasAttribute("data-cta-data")) { S.ctas[+t.getAttribute("data-cta-data")].data = t.value; refreshAll(); }
+});
+document.addEventListener("change", function (e) {
+  var t = e.target;
+  if (t.id === "f-agree") { updateSubmitEnabled(); }
+  else if (t.hasAttribute("data-cta-kind")) { S.ctas[+t.getAttribute("data-cta-kind")].kind = t.value; renderCtas(); refreshAll(); }
+});
+document.addEventListener("click", function (e) {
+  var t = e.target.closest("[data-type],[data-tag],[data-media],[data-next],[data-back],[data-scenario],[data-del-row],[data-del-cta],[data-cta-style],#btn-add-row,#btn-add-cta,#btn-submit,#btn-copy-json,#btn-results-back,#btn-results-continue,#btn-success-reset,#results-backdrop,.tab-trigger");
+  if (!t) return;
+
+  if (t.hasAttribute("data-type")) { S.type = t.getAttribute("data-type"); renderTypeChips(); syncTypeDependentBlocks(); refreshAll(); }
+  else if (t.hasAttribute("data-tag")) { S.tag = t.getAttribute("data-tag"); renderTagChips(); }
+  else if (t.hasAttribute("data-media")) { S.media = t.getAttribute("data-media"); syncMediaToggle(); refreshAll(); }
+  else if (t.classList.contains("tab-trigger")) { showTab(+t.getAttribute("data-tab")); }
+  else if (t.hasAttribute("data-next")) { showTab(+t.getAttribute("data-next")); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  else if (t.hasAttribute("data-back")) { showTab(+t.getAttribute("data-back")); }
+  else if (t.hasAttribute("data-scenario")) {
+    selectedScenario = +t.getAttribute("data-scenario");
+    SCENARIOS[selectedScenario].apply();
+    clearFlags();
+    renderScenarios(); renderTypeChips(); renderTagChips(); renderRows(); renderCtas(); syncTypeDependentBlocks();
+    $("f-oaid").value = S.oaId; $("f-title").value = S.title; $("f-body").value = S.body;
+    $("f-logo-light").value = S.logoLight; $("f-logo-dark").value = S.logoDark;
+    $("f-ou-1").value = S.ou1; $("f-ou-2").value = S.ou2;
+    $("f-body-count").textContent = S.body.length + "/400 ký tự";
+    refreshAll();
+    window.scrollTo({ top: document.querySelector("[data-panel]").offsetTop - 80, behavior: "smooth" });
+  }
+  else if (t.id === "btn-add-row") { S.mapRows.push({ k: "", v: "" }); renderRows(); refreshAll(); }
+  else if (t.hasAttribute("data-del-row")) { S.mapRows.splice(+t.getAttribute("data-del-row"), 1); renderRows(); refreshAll(); }
+  else if (t.id === "btn-add-cta") { if (S.ctas.length < 3) { S.ctas.push({ label: "", kind: "link", data: "", style: "button-primary" }); renderCtas(); refreshAll(); } }
+  else if (t.hasAttribute("data-del-cta")) { S.ctas.splice(+t.getAttribute("data-del-cta"), 1); renderCtas(); refreshAll(); }
+  else if (t.hasAttribute("data-cta-style")) { S.ctas[+t.getAttribute("data-cta-style")].style = t.getAttribute("data-style"); renderCtas(); refreshAll(); }
+  else if (t.id === "btn-submit") { if (!$("btn-submit").disabled) runSubmit(); }
+  else if (t.id === "btn-copy-json") {
+    var txt = $("json-output").textContent;
+    try { navigator.clipboard.writeText(txt); } catch (err) {}
+    $("copy-json-label").textContent = "Đã chép!";
+    setTimeout(function () { $("copy-json-label").textContent = "Sao chép"; }, 1500);
+  }
+  else if (t.id === "btn-results-back" || t.id === "results-backdrop") {
+    closeModal("modal-results");
+    setStep(1);
+    if (lastResults) flagViolatingFields(lastResults.blocks.concat(lastResults.warns));
+    showTab(2);
+    setTimeout(function () {
+      var firstFlag = document.querySelector(".field-flagged");
+      if (firstFlag) firstFlag.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 260);
+  }
+  else if (t.id === "btn-results-continue") {
+    closeModal("modal-results");
+    setStep(3);
+    setTimeout(function () { openModal("modal-success"); }, 240);
+  }
+  else if (t.id === "btn-success-reset") {
+    closeModal("modal-success");
+    clearFlags();
+    $("f-agree").checked = false; updateSubmitEnabled();
+    setStep(1); showTab(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    ["modal-results", "modal-success"].forEach(function (id) {
+      if (!$(id).classList.contains("hidden")) closeModal(id);
+    });
+  }
+});
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+else boot();
+
+
+
+
+/* ===================== QUY TẮC MỞ RỘNG THEO BIỂU MẪU =====================
+ * Bổ sung cho engine xác định, đối chiếu zbs_rule_map.md + bảng định dạng tham số.
+ * Hoạt động trên `acc` (đã normalize) và state `S` của biểu mẫu. */
+function extraFormChecks(acc, tag) {
+  var out = [];
+  var sources = allContentSources(acc);
+  var content = sources.join("\n");
+  var lower = content.toLowerCase();
+  var has = function (arr) { return arr.some(function (s) { return lower.indexOf(s) !== -1; }); };
+
+  // GEN-07: tiêu đề bắt buộc
+  if (!(S.title || "").trim()) {
+    out.push({ ruleId: "GEN-07", severity: "block", title: "Thiếu tiêu đề mẫu tin",
+      detail: "Mẫu tin cần tiêu đề rõ ràng để thể hiện đúng mục đích.",
+      suggestion: "Nhập tiêu đề ở tab Nội dung tin nhắn." });
+  }
+
+  // GEN-24: không xưng hô "anh/chị"
+  if (has(["anh/chị", "anh / chị", "chị/anh", "anh chị"])) {
+    out.push({ ruleId: "GEN-24", severity: "warn", title: "Dùng \"anh/chị\" để xưng hô",
+      detail: "Nên dùng biến giới tính hoặc từ trung tính (bạn, quý khách, khách hàng, hội viên...).",
+      suggestion: "Thay \"anh/chị\" bằng biến <xung_ho> hoặc \"Quý khách\"." });
+  }
+
+  // GEN-11: icon / emoji / ký tự trang trí
+  try {
+    if (/\p{Extended_Pictographic}/u.test(content) || /[←-⇿⌀-➿⬀-⯿★☆●■•»«]/.test(content)) {
+      out.push({ ruleId: "GEN-11", severity: "warn", title: "Nội dung có icon / ký tự đặc biệt",
+        detail: "Mẫu tin không nên dùng emoji, icon hay ký tự trang trí.",
+        suggestion: "Gỡ các icon/emoji khỏi tiêu đề và nội dung." });
+    }
+  } catch (e) { /* môi trường cũ không hỗ trợ \\p{...} */ }
+
+  // GEN-12: văn phong mê tín / thần thánh hóa (mọi Tag)
+  if (has(["tín chủ", "thầy pháp", "bùa", "ngải", "giải hạn", "giải vận", "thần thánh", "phép màu", "linh thiêng"])) {
+    out.push({ ruleId: "GEN-12", severity: "block", title: "Văn phong mê tín / thần thánh hóa",
+      detail: "Nội dung chứa từ ngữ mang tính mê tín, lừa gạt hoặc thần thánh hóa sản phẩm.",
+      suggestion: "Diễn đạt lại theo văn phong chuyên nghiệp, trung tính." });
+  }
+
+  var promo = ["ưu đãi", "khuyến mãi", "khuyen mai", "giảm giá", "giam gia", "mua ngay", "đặt mua",
+    "sản phẩm mới", "ra mắt", "flash sale", "sale ", "mã giảm", "quà tặng", "tặng voucher",
+    "săn deal", "deal sốc", "ưu đãi độc quyền", "tích điểm đổi quà"];
+  var isPromo = has(promo);
+
+  // TAG-04 / TAG-05a: nội dung hậu mãi/khuyến mãi nhưng chưa gắn Tag 3
+  if (isPromo && tag !== "3") {
+    out.push({ ruleId: "TAG-04", severity: "warn", title: "Nội dung mang tính hậu mãi/khuyến mãi nhưng chưa gắn Tag 3",
+      detail: "Mọi nội dung quảng bá, ưu đãi, khuyến mãi, mời mua đều phải gắn Tag 3 — Hậu mãi.",
+      suggestion: "Đổi mục đích gửi tin sang Cấp độ 3 — Hậu mãi, hoặc bỏ nội dung khuyến mãi." });
+  }
+
+  // TAG-05c: mẫu xác thực (OTP) phải Tag 1
+  if ((acc.hasOtp || S.type === "otp") && tag !== "1") {
+    out.push({ ruleId: "TAG-05c", severity: "warn", title: "Mẫu xác thực (OTP) phải gắn Tag 1",
+      detail: "Theo quy định, mẫu Xác thực luôn thuộc Tag 1 — Giao dịch.",
+      suggestion: "Đổi mục đích gửi tin về Cấp độ 1 — Giao dịch." });
+  }
+
+  // TAG-05d: mẫu đánh giá phải Tag 2
+  if (acc.hasStars && tag !== "2") {
+    out.push({ ruleId: "TAG-05d", severity: "warn", title: "Mẫu đánh giá/khảo sát phải gắn Tag 2",
+      detail: "Nội dung đánh giá dịch vụ luôn thuộc Tag 2 — Chăm sóc khách hàng.",
+      suggestion: "Đổi mục đích gửi tin về Cấp độ 2 — Chăm sóc." });
+  }
+
+  // Loại mẫu Yêu cầu chi trả (giao dịch) phải gắn Tag 1
+  if (S.type === "payment" && tag !== "1") {
+    out.push({ ruleId: "TAG-02", severity: "warn", title: "Mẫu Yêu cầu thanh toán nên gắn Tag 1 (Giao dịch)",
+      detail: "Yêu cầu thanh toán cho dịch vụ đã dùng là nội dung giao dịch — thuộc Tag 1.",
+      suggestion: "Đổi mục đích gửi tin về Cấp độ 1 — Giao dịch." });
+  }
+  // Voucher/ưu đãi không phải giao dịch -> không gắn Tag 1
+  if (S.type === "voucher" && tag === "1") {
+    out.push({ ruleId: "TAG-05", severity: "warn", title: "Mẫu Voucher/ưu đãi không nên gắn Tag 1",
+      detail: "Voucher/ưu đãi thuộc nhóm hậu mãi (Tag 3) hoặc quyền lợi khách thân thiết (Tag 2), không phải giao dịch.",
+      suggestion: "Đổi mục đích gửi tin sang Cấp độ 3 — Hậu mãi (hoặc Cấp độ 2 nếu là loyalty)." });
+  }
+
+  // T3-05: khuyến mãi phải nêu thể lệ / điều kiện / hạn dùng
+  if (tag === "3" && isPromo &&
+      !has(["điều kiện", "thể lệ", "hạn sử dụng", "hsd", "áp dụng đến", "đến hết", "hết hạn", "thời gian áp dụng", "có hiệu lực đến"])) {
+    out.push({ ruleId: "T3-05", severity: "warn", title: "Khuyến mãi chưa nêu rõ thể lệ / điều kiện / hạn dùng",
+      detail: "Mẫu khuyến mãi (Tag 3) phải thể hiện rõ thể lệ, điều kiện áp dụng và hạn sử dụng.",
+      suggestion: "Bổ sung điều kiện áp dụng và hạn sử dụng của ưu đãi." });
+  }
+
+  // SP-01a / SP-02a: dịp đặc biệt cần hình ảnh
+  var occasion = ["sinh nhật", "chúc mừng năm mới", "tết", "giáng sinh", "noel", "quốc khánh",
+    "trung thu", "valentine", "quốc tế phụ nữ", "nhà giáo", "phụ nữ việt nam", "ngày của mẹ", "ngày của cha"];
+  var hasImage = !!acc.logo || (S.media === "map_image" && (S.mapImage || "").trim());
+  if (has(occasion) && !hasImage) {
+    out.push({ ruleId: "SP-01a/02a", severity: "warn", title: "Mẫu dịp đặc biệt (sinh nhật/lễ tết) cần có hình ảnh",
+      detail: "Mẫu chúc mừng sinh nhật hoặc lễ tết bắt buộc sử dụng hình ảnh trong mẫu.",
+      suggestion: "Thêm logo OA hoặc ảnh slider cho mẫu tin." });
+  }
+
+  // GEN-15 / GEN-20: logo dark mode KHÔNG bắt buộc (biểu mẫu tự fallback dark = light) -> không cảnh báo.
+
+  // GEN-40 / T1-08: cần kiểm tra chủ tài khoản nhận thanh toán
+  if (S.type === "payment" && (S.ou2 || "").trim()) {
+    out.push({ ruleId: "GEN-40", severity: "warn", title: "Cần kiểm tra chủ tài khoản nhận thanh toán",
+      detail: "Số tài khoản & tên chủ tài khoản phải đúng doanh nghiệp sở hữu OA (hoặc có văn bản ủy quyền thu hộ).",
+      suggestion: "Đảm bảo tên chủ tài khoản trùng doanh nghiệp sở hữu OA." });
+  }
+
+  // PARAM: định dạng tham số theo bảng dữ liệu (URL phải http(s), tránh ký tự đặc biệt trong text)
+  var params = extractParams(acc).map(function (p) { return p.name; });
+  var seen = {};
+  params.forEach(function (n) {
+    if (seen[n]) return; seen[n] = true;
+    // tham số dạng số nhưng đặt tên có dấu chấm/đặc biệt — bắt bởi GEN-21/22/23 ở engine; ở đây chỉ nhắc URL
+  });
+  S.ctas.forEach(function (c) {
+    if (c.kind === "link" && (c.data || "").trim()) {
+      var url = c.data.trim();
+      if (!/^https?:\/\//i.test(url)) {
+        out.push({ ruleId: "PARAM-URL", severity: "warn", title: "Link CTA chưa đúng định dạng URL",
+          detail: "Nút \"" + (c.label || "") + "\" dùng link \"" + url + "\".",
+          suggestion: "Link phải bắt đầu bằng http:// hoặc https:// và độ dài tối đa 200 ký tự." });
+      } else if (url.length > 200) {
+        out.push({ ruleId: "PARAM-URL", severity: "warn", title: "Link CTA vượt quá 200 ký tự",
+          detail: "Nút \"" + (c.label || "") + "\" có link dài " + url.length + " ký tự.",
+          suggestion: "Rút ngắn URL (giữ link đầy đủ, không dùng dịch vụ rút gọn) xuống tối đa 200 ký tự." });
+      }
+    }
+  });
+
+  return out;
+}
+
+
+
+/* ===================== (9) MẪU ĐÃ GỬI DUYỆT ===================== */
+var submissions = [];
+var pendingRecall = null;
+
+function renderSubmissions() {
+  var grid = document.getElementById("submissions-grid");
+  var cnt = document.getElementById("submissions-count");
+  if (!grid) return;
+  cnt.textContent = submissions.length + " mẫu";
+  if (!submissions.length) {
+    grid.innerHTML = '<div class="col-span-full text-center text-[11px] text-slate-300 font-medium py-6">Chưa có mẫu nào được gửi duyệt.</div>';
+    return;
+  }
+  grid.innerHTML = submissions.map(function (r, i) {
+    var badge = r.flagged
+      ? '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border text-amber-600 bg-amber-50 border-amber-100 shrink-0">Có cảnh báo</span>'
+      : '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border text-emerald-600 bg-emerald-50 border-emerald-100 shrink-0">Đã gửi</span>';
+    return '<button data-submission="' + i + '" class="group text-left rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/40 hover:shadow-md hover:-translate-y-0.5 p-3.5 transition-all active:scale-[0.98]">' +
+      '<div class="flex items-center justify-between gap-2 mb-1.5">' +
+        '<span class="text-[12px] font-extrabold text-slate-800 leading-tight truncate group-hover:text-[#0068FF]">' + esc(r.title || "(Chưa đặt tiêu đề)") + '</span>' + badge +
+      '</div>' +
+      '<p class="text-[10px] text-slate-400 font-medium">' + esc(r.typeLabel) + ' · ' + esc(r.tagLabel) + '</p></button>';
+  }).join("");
+}
+
+function saveSubmission() {
+  var blocks = (lastResults && lastResults.blocks) || [];
+  var warns = (lastResults && lastResults.warns) || [];
+  var viol = blocks.concat(warns);
+  var meta = TYPES.filter(function (t) { return t.id === S.type; })[0] || {};
+  var tg = TAGS.filter(function (t) { return t.id === S.tag; })[0] || {};
+  submissions.unshift({
+    title: S.title,
+    typeLabel: meta.label || S.type,
+    tagLabel: tg.label || ("Tag " + S.tag),
+    flagged: viol.length > 0,
+    violations: viol,
+    snapshot: JSON.parse(JSON.stringify(S))
+  });
+  renderSubmissions();
+}
+
+function rehydrateForm() {
+  $("f-oaid").value = S.oaId || "";
+  $("f-title").value = S.title || "";
+  $("f-body").value = S.body || "";
+  $("f-logo-light").value = S.logoLight || "";
+  $("f-logo-dark").value = S.logoDark || "";
+  if ($("f-map-image")) $("f-map-image").value = S.mapImage || "";
+  $("f-ou-1").value = S.ou1 || "";
+  $("f-ou-2").value = S.ou2 || "";
+  $("f-body-count").textContent = (S.body || "").length + "/400 ký tự";
+  renderTypeChips(); renderTagChips(); renderRows(); renderCtas(); syncTypeDependentBlocks(); refreshAll();
+}
+
+function openSubmission(i) {
+  pendingRecall = i;
+  var r = submissions[i];
+  if (!r) return;
+  if (!r.flagged) openModal("modal-sent");
+  else openModal("modal-recall");
+}
+
+function recallEdit() {
+  if (pendingRecall == null) return;
+  var i = pendingRecall;
+  var r = submissions[i];
+  closeModal("modal-recall");
+  var snap = r.snapshot;
+  Object.keys(snap).forEach(function (k) { S[k] = snap[k]; });
+  selectedScenario = null;
+  rehydrateForm();
+  submissions.splice(i, 1);
+  renderSubmissions();
+  pendingRecall = null;
+  setStep(1);
+  showTab(2);
+  flagViolatingFields(r.violations || []);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(function () {
+    var ff = document.querySelector(".field-flagged");
+    if (ff) ff.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 320);
+}
+
+document.addEventListener("click", function (e) {
+  if (e.target.closest("#btn-new-template")) { resetForm(); return; }
+  if (e.target.closest("#btn-results-continue")) { saveSubmission(); return; }
+  var sub = e.target.closest("[data-submission]");
+  if (sub) { openSubmission(+sub.getAttribute("data-submission")); return; }
+  if (e.target.closest("#btn-sent-ok") || e.target.closest("#sent-backdrop")) { closeModal("modal-sent"); return; }
+  if (e.target.closest("#btn-recall-back") || e.target.closest("#recall-backdrop")) { closeModal("modal-recall"); pendingRecall = null; return; }
+  if (e.target.closest("#btn-recall-edit")) { recallEdit(); return; }
+  if (e.target.closest("#btn-success-review")) {
+    closeModal("modal-success");
+    setTimeout(function () {
+      var sec = document.getElementById("submissions-grid");
+      if (sec) {
+        sec.scrollIntoView({ behavior: "smooth", block: "center" });
+        sec.parentElement.parentElement.classList.add("ring-2", "ring-blue-500/40");
+        setTimeout(function () { sec.parentElement.parentElement.classList.remove("ring-2", "ring-blue-500/40"); }, 1400);
+      }
+    }, 260);
+    return;
+  }
+});
+
+renderSubmissions();
+
+/* nhãn quy định dễ hiểu (thay mã rule kỹ thuật trên kết quả) */
+function friendlyRule(id) {
+  id = String(id || "");
+  var m = { A1:"Thiếu thông tin giao dịch", A2:"Văn phong chưa phù hợp", A3:"Liên kết không hợp lệ", A4:"Lỗi chính tả / đánh máy", A5:"Thông tin chuyển khoản", TAG:"Phân loại mục đích (Tag)" };
+  if (m[id]) return m[id];
+  if (/GEN-26/.test(id)) return "SĐT/Link trong nội dung";
+  if (/GEN-2[1235]/.test(id)) return "Định dạng tham số";
+  if (/GEN-24/.test(id)) return "Cách xưng hô";
+  if (/GEN-11/.test(id)) return "Icon / ký tự đặc biệt";
+  if (/GEN-12/.test(id)) return "Văn phong chưa phù hợp";
+  if (/GEN-15/.test(id)) return "Logo";
+  if (/GEN-27/.test(id)) return "Link rút gọn";
+  if (/GEN-29/.test(id)) return "Link nhóm/cộng đồng";
+  if (/GEN-35/.test(id)) return "Mã giảm giá / Voucher";
+  if (/GEN-40/.test(id)) return "Thông tin chuyển khoản";
+  if (/T3-02/.test(id)) return "Hotline trên nút bấm";
+  if (/T3-05/.test(id)) return "Thể lệ khuyến mãi";
+  if (/T2-06/.test(id)) return "Mẫu khảo sát";
+  if (/T1-03|T1-02|T2-02|T3-06/.test(id)) return "Tham số định danh";
+  if (/TAG-/.test(id)) return "Phân loại mục đích (Tag)";
+  if (/PARAM-URL/.test(id)) return "Định dạng link nút bấm";
+  if (/SP-/.test(id)) return "Yêu cầu hình ảnh";
+  return "Quy định ZBS";
+}
+/* tạo mới: làm trống toàn bộ biểu mẫu */
+function resetForm() {
+  S.oaId = ""; S.type = "custom"; S.tag = "1"; S.media = "oa_info";
+  S.logoLight = ""; S.logoDark = ""; S.mapImage = "";
+  S.title = ""; S.body = ""; S.mapRows = []; S.ou1 = ""; S.ou2 = ""; S.ctas = [];
+  if (typeof selectedScenario !== "undefined") selectedScenario = null;
+  clearFlags();
+  rehydrateForm();
+  renderScenarios();
+  setStep(1); showTab(1);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+
+
+/* ===================== ĐẾM KÝ TỰ REALTIME (X/MAX) + KHOÁ KHI ĐẠT GIỚI HẠN ===================== */
+var CC_SEL = '#f-title,#f-ou-1,#f-ou-2,#f-logo-light,#f-logo-dark,#f-map-image,[data-rk],[data-rv],[data-cta-label],[data-cta-data]';
+function ccMax(el) { var m = parseInt(el.getAttribute('maxlength') || '0', 10); return m > 0 ? m : 0; }
+function ccUpdate(el) {
+  if (!el.__cc) return;
+  var max = ccMax(el), len = (el.value || '').length;
+  el.__cc.textContent = max ? (len + '/' + max) : String(len);
+  el.__cc.classList.toggle('cc-over', max > 0 && len >= max);
+}
+function ccWrap(el) {
+  if (el.__ccWrapped) return; el.__ccWrapped = true;
+  var flex = el.classList.contains('flex-1');
+  var w = document.createElement('span');
+  w.className = 'cc-wrap' + (flex ? ' flex-1' : '');
+  w.style.position = 'relative'; w.style.display = 'block';
+  el.parentNode.insertBefore(w, el); w.appendChild(el);
+  if (flex) { el.classList.remove('flex-1'); el.classList.add('w-full'); }
+  el.style.paddingRight = '3.4rem';
+  var cc = document.createElement('span'); cc.className = 'cc';
+  w.appendChild(cc); el.__cc = cc;
+}
+function refreshCounters() {
+  document.querySelectorAll(CC_SEL).forEach(function (el) {
+    ccWrap(el);
+    if (el.hasAttribute('data-rv')) { el.setAttribute('maxlength', dataLimitFor(el.value)); el.title = valTooltip(el.value); }
+    ccUpdate(el);
+  });
+}
+document.addEventListener('input', function (e) {
+  var el = e.target;
+  if (!el.matches || !el.matches(CC_SEL)) return;
+  if (el.hasAttribute('data-rv')) { el.setAttribute('maxlength', dataLimitFor(el.value)); el.title = valTooltip(el.value); }
+  ccUpdate(el);
+});
+/* các thay đổi không qua sự kiện input (đổi loại mẫu, nạp case mẫu, thu hồi & sửa) -> làm mới sau click */
+document.addEventListener('click', function () { setTimeout(refreshCounters, 0); });
+/* khi bảng thông tin / CTA được render lại -> bọc & đếm cho các ô mới */
+['map-rows', 'cta-list'].forEach(function (id) {
+  var c = document.getElementById(id);
+  if (c) new MutationObserver(refreshCounters).observe(c, { childList: true });
+});
+refreshCounters();
+
+
+
+/* ===================== TUTORIAL TỰ CHẠY ===================== */
+(function () {
+  var chip = function (t) { return '<span class="text-blue-500 font-bold">&lt;' + t + '&gt;</span>'; };
+  var SLIDES = [
+    { title: "Chào mừng đến ZBS Sandbox Studio",
+      desc: "Công cụ giúp bạn soạn mẫu tin ZNS trực quan, xem trước trên Zalo và tự kiểm duyệt theo bộ quy định ZBS trước khi gửi.",
+      visual:
+        '<div class="flex flex-col items-center gap-3">' +
+          '<div class="w-16 h-16 rounded-2xl bg-white border border-blue-100 shadow flex items-center justify-center"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/3840px-Icon_of_Zalo.svg.png" class="w-10 h-10 object-contain"></div>' +
+          '<div class="w-44 bg-white rounded-xl border border-slate-200 shadow-sm p-3 text-left">' +
+            '<div class="text-[9px] font-bold text-slate-400 mb-1">OA chính thức</div>' +
+            '<div class="text-[11px] font-extrabold text-slate-800 leading-snug">Thông báo cước dịch vụ</div>' +
+            '<div class="text-[9px] text-slate-500 mt-1 leading-snug">Xin chào ' + chip('customer_name') + ', kỳ cước mới đã có…</div>' +
+            '<div class="mt-2 text-center text-[9px] font-bold text-white bg-[#0068FF] rounded-md py-1">Thanh toán ngay</div>' +
+          '</div>' +
+        '</div>' },
+    { title: "Bước 1 — Chọn loại mẫu & mục đích (Tag)",
+      desc: "Chọn loại nội dung và Tag phù hợp. Tag quyết định bộ quy tắc kiểm duyệt áp dụng cho mẫu tin của bạn.",
+      visual:
+        '<div class="w-full px-6 flex flex-col gap-3">' +
+          '<div class="grid grid-cols-3 gap-2">' +
+            '<div class="text-center text-[10px] font-bold py-2 rounded-lg border border-slate-200 bg-white text-slate-500">Tuỳ chỉnh</div>' +
+            '<div class="text-center text-[10px] font-extrabold py-2 rounded-lg border border-blue-300 bg-blue-50 text-[#0068FF] ring-2 ring-blue-500/15">Xác thực</div>' +
+            '<div class="text-center text-[10px] font-bold py-2 rounded-lg border border-slate-200 bg-white text-slate-500">Đánh giá</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-3 gap-2">' +
+            '<div class="text-center text-[9px] font-extrabold py-2 rounded-lg border border-blue-300 bg-blue-50 text-[#0068FF]">Cấp 1 · Giao dịch</div>' +
+            '<div class="text-center text-[9px] font-bold py-2 rounded-lg border border-slate-200 bg-white text-slate-500">Cấp 2 · Chăm sóc</div>' +
+            '<div class="text-center text-[9px] font-bold py-2 rounded-lg border border-slate-200 bg-white text-slate-500">Cấp 3 · Hậu mãi</div>' +
+          '</div>' +
+        '</div>' },
+    { title: "Bước 2 — Soạn nội dung & chèn tham số",
+      desc: "Nhập tiêu đề, nội dung và chèn biến cá nhân hoá dạng <ten_bien>. Bản xem trước Zalo cập nhật ngay theo thông tin bạn nhập.",
+      visual:
+        '<div class="w-full px-5 flex items-center gap-3">' +
+          '<div class="flex-1 bg-white border border-slate-200 rounded-xl p-2.5 text-[9px] text-slate-600 leading-relaxed shadow-sm">Xin chào ' + chip('customer_name') + ', đơn hàng ' + chip('order_code') + ' của bạn đã được xác nhận.</div>' +
+          '<svg class="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>' +
+          '<div class="w-28 bg-white border border-slate-200 rounded-xl p-2 shadow-sm shrink-0">' +
+            '<div class="text-[8px] font-bold text-slate-400">OA chính thức</div>' +
+            '<div class="text-[9px] font-extrabold text-slate-800 mt-0.5 leading-snug">Xác nhận đơn</div>' +
+            '<div class="text-[8px] text-slate-500 mt-0.5 leading-snug">Xin chào <span class="text-slate-400 font-semibold">&lt;customer_name&gt;</span>…</div>' +
+          '</div>' +
+        '</div>' },
+    { title: "Bước 3 — Kiểm duyệt thông minh",
+      desc: "Khi gửi, hệ thống quét JSON sinh ra theo bộ quy định ZBS và chỉ ra điểm vi phạm cùng gợi ý sửa, giúp tăng tỉ lệ duyệt.",
+      visual:
+        '<div class="w-full px-6 flex flex-col gap-2.5">' +
+          '<div class="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-600 border border-rose-100"><span class="w-2 h-2 rounded-full bg-rose-500"></span>KHÔNG ĐẠT</div>' +
+          '<div class="rounded-xl border border-rose-100 bg-rose-50/60 p-3 text-left">' +
+            '<div class="flex items-center gap-2 mb-1"><span class="text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">GEN-26</span><span class="text-[8px] font-extrabold uppercase text-rose-600">Vi phạm</span></div>' +
+            '<div class="text-[10px] font-bold text-slate-800 leading-snug">Phát hiện số điện thoại trong nội dung</div>' +
+            '<div class="text-[9px] text-[#0068FF] font-semibold mt-1">→ Chuyển số điện thoại sang nút CTA.</div>' +
+          '</div>' +
+        '</div>' },
+    { title: "Bước 4 — Theo dõi mẫu đã gửi duyệt",
+      desc: "Mọi mẫu bạn gửi được lưu ở mục 'Mẫu đã gửi duyệt'. Mẫu đạt hiển thị trạng thái đã gửi; mẫu còn cảnh báo có thể thu hồi & chỉnh sửa lại — các trường vi phạm sẽ được tô đỏ để bạn sửa nhanh.",
+      visual:
+        '<div class="w-full px-6 flex flex-col gap-2">' +
+          '<div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">' +
+            '<span class="text-[10px] font-extrabold text-slate-800">Thông báo cước dịch vụ</span>' +
+            '<span class="text-[8px] font-extrabold px-1.5 py-0.5 rounded-md border text-emerald-600 bg-emerald-50 border-emerald-100">Đã gửi</span>' +
+          '</div>' +
+          '<div class="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/40 p-2.5 shadow-sm">' +
+            '<span class="text-[10px] font-extrabold text-slate-800">Báo cáo Toyota</span>' +
+            '<span class="text-[8px] font-extrabold px-1.5 py-0.5 rounded-md border text-amber-600 bg-amber-50 border-amber-100">Có cảnh báo</span>' +
+          '</div>' +
+          '<div class="self-end inline-flex items-center gap-1 text-[9px] font-extrabold text-white bg-[#0068FF] px-2.5 py-1 rounded-lg mt-0.5">Thu hồi &amp; chỉnh sửa lại</div>' +
+        '</div>' }
+  ];
+
+  var overlay = document.getElementById("tut-overlay");
+  var bars = document.getElementById("tut-bars");
+  var visual = document.getElementById("tut-visual");
+  var titleEl = document.getElementById("tut-title");
+  var descEl = document.getElementById("tut-desc");
+  var acceptWrap = document.getElementById("tut-accept-wrap");
+  var acceptBox = document.getElementById("tut-accept");
+  var gateNote = document.getElementById("tut-gate-note");
+  var prevBtn = document.getElementById("tut-prev");
+  var nextBtn = document.getElementById("tut-next");
+  var startBtn = document.getElementById("tut-start");
+  var skipBtn = document.getElementById("tut-skip");
+
+  var idx = 0, timer = null, playing = false, DUR = 3800;
+  bars.innerHTML = SLIDES.map(function () {
+    return '<div class="flex-1 h-1 rounded-full bg-slate-200 overflow-hidden"><div class="tut-bar-fill h-full w-0 bg-[#0068FF]"></div></div>';
+  }).join("");
+  var fills = Array.prototype.slice.call(bars.querySelectorAll(".tut-bar-fill"));
+
+  function stopAuto() { playing = false; if (timer) { clearInterval(timer); timer = null; } }
+  function startAuto() {
+    stopAuto(); playing = true;
+    timer = setInterval(function () {
+      if (idx >= SLIDES.length - 1) { stopAuto(); render(); return; }
+      go(idx + 1);
+    }, DUR);
+  }
+
+  function render() {
+    var s = SLIDES[idx];
+    visual.classList.remove("animate-fade-in"); void visual.offsetWidth; visual.classList.add("animate-fade-in");
+    visual.innerHTML = s.visual;
+    titleEl.textContent = s.title;
+    descEl.textContent = s.desc;
+    fills.forEach(function (f, i) {
+      if (i < idx) { f.style.transition = "none"; f.style.width = "100%"; }
+      else if (i > idx) { f.style.transition = "none"; f.style.width = "0%"; }
+      else {
+        f.style.transition = "none"; f.style.width = "0%"; void f.offsetWidth;
+        if (playing) { f.style.transition = "width " + DUR + "ms linear"; f.style.width = "100%"; }
+        else { f.style.transition = "width .3s ease"; f.style.width = "100%"; }
+      }
+    });
+    prevBtn.style.visibility = idx === 0 ? "hidden" : "visible";
+    var last = idx === SLIDES.length - 1;
+    acceptWrap.classList.toggle("hidden", !last);
+    acceptWrap.classList.toggle("flex", last);
+    nextBtn.classList.toggle("hidden", last);
+    startBtn.classList.toggle("hidden", !last);
+    if (last) { startBtn.disabled = !acceptBox.checked; } else { gateNote.classList.add("hidden"); }
+  }
+  function go(n) { idx = Math.max(0, Math.min(SLIDES.length - 1, n)); render(); }
+
+  nextBtn.addEventListener("click", function () { stopAuto(); go(idx + 1); });
+  prevBtn.addEventListener("click", function () { stopAuto(); go(idx - 1); });
+  skipBtn.addEventListener("click", function () { stopAuto(); go(SLIDES.length - 1); gateNote.classList.remove("hidden"); });
+  acceptBox.addEventListener("change", function () { startBtn.disabled = !acceptBox.checked; if (acceptBox.checked) gateNote.classList.add("hidden"); });
+  startBtn.addEventListener("click", function () {
+    if (!acceptBox.checked) { gateNote.classList.remove("hidden"); return; }
+    if (typeof resetForm === "function") resetForm();
+    stopAuto();
+    overlay.style.opacity = "0";
+    overlay.style.transition = "opacity .25s ease";
+    setTimeout(function () { overlay.remove(); document.body.style.overflow = ""; }, 250);
+  });
+
+  document.body.style.overflow = "hidden";
+  startAuto();
+  render();
+})();
+
+</script>
+</body>
+</html>
