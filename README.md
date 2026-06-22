@@ -1,14 +1,10 @@
 <div align="center">
 
-# 🟦 ZBS Sandbox Studio
+# ZBS Sandbox Studio
 
-### Trình soạn & tự kiểm duyệt mẫu tin ZNS trước khi gửi duyệt
-
-*Nhập thông tin → tự sinh JSON → đối chiếu bộ quy tắc → AI kiểm duyệt → gửi CTV ZBS.*
+### Tôi xây công cụ này với một mong muốn giản dị: để mỗi mẫu tin của bạn được duyệt ngay từ lần gửi đầu tiên.
 
 ### ▶️ Dùng thử ngay (bản online): **[zbs-studio-nguyenhoangminh.vercel.app](https://zbs-studio-nguyenhoangminh.vercel.app/)**
-
-***Tôi xây công cụ này với một mong muốn giản dị: để mỗi mẫu tin của bạn được duyệt ngay từ lần gửi đầu tiên.***
 
 </div>
 
