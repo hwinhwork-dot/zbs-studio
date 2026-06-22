@@ -6,7 +6,9 @@
 
 *Nhập thông tin → tự sinh JSON → đối chiếu bộ quy tắc → AI kiểm duyệt → gửi CTV ZBS.*
 
-**Tông màu: Trắng · Xanh Zalo `#0068FF` — Giao diện tối giản, một file HTML chạy ngay không cần cài đặt.**
+### ▶️ Dùng thử ngay (bản online): **[zbs-studio-nguyenhoangminh.vercel.app](https://zbs-studio-nguyenhoangminh.vercel.app/)**
+
+***Tôi xây công cụ này với một mong muốn giản dị: để mỗi mẫu tin của bạn được duyệt ngay từ lần gửi đầu tiên.***
 
 </div>
 
@@ -262,8 +264,8 @@ Vì ô đó đã chạm giới hạn ký tự theo quy định ZBS. Bạn nhìn 
 **Hỏi: Kết quả "Đạt" ở đây có nghĩa là chắc chắn Zalo sẽ duyệt không?**
 Không hẳn. "Đạt" nghĩa là mẫu của bạn đã vượt qua các lớp kiểm tra mà tôi có thể tự động hóa. Quyết định cuối cùng vẫn thuộc về chuyên viên CTV ZBS, đặc biệt với những điều cần hồ sơ pháp lý (giấy phép, quyền sở hữu logo, ủy quyền tài khoản…). Tôi giúp bạn tối đa hóa khả năng được duyệt, chứ không thay thế Zalo.
 
-**Hỏi: AI không chạy thì sao?**
-Nếu bạn mở ngoại tuyến, lớp AI sẽ tự ẩn và báo nhẹ. Toàn bộ lớp kiểm tra tự động vẫn hoạt động đầy đủ, nên mẫu của bạn vẫn được soát rất kỹ về mặt cấu trúc và quy tắc cứng.
+**Hỏi: Tôi mở bản online trên Vercel mà sao không thấy AI chạy?**
+Đó là điều bình thường và đúng như thiết kế. Lớp AI chỉ kết nối được khi công cụ chạy trong môi trường Claude.ai; còn trên bản web công khai (Vercel) hay khi mở file ngoại tuyến, lớp AI sẽ tự ẩn. Tuy vậy, toàn bộ lớp kiểm tra tự động theo bộ quy tắc ZBS vẫn hoạt động đầy đủ, nên mẫu của bạn vẫn được soát rất kỹ về cấu trúc và các quy tắc cứng.
 
 **Hỏi: Tôi lỡ gửi một mẫu còn cảnh báo thì sao?**
 Bạn vào mục "Mẫu đã gửi duyệt", bấm vào mẫu đó và chọn "Thu hồi & chỉnh sửa lại". Tôi sẽ nạp lại đúng dữ liệu và tô đỏ những ô cần sửa.
@@ -274,19 +276,13 @@ Bạn vào mục "Mẫu đã gửi duyệt", bấm vào mẫu đó và chọn "T
 
 ### Dành cho người dùng
 
-Công cụ là **một file HTML duy nhất**: `zbs_template_studio.html`. Bạn chỉ cần **mở nó bằng trình duyệt** (Chrome, Safari, Edge…) là dùng được ngay, không cần cài đặt gì. Để lớp AI hoạt động, hãy mở trong môi trường Claude.ai.
+Cách nhanh nhất là bạn **truy cập bản online** mà tôi đã triển khai trên Vercel:
 
-### Dành cho người phát triển
+> 🔗 **https://zbs-studio-nguyenhoangminh.vercel.app/**
 
-File HTML không được sửa tay. Tôi sinh nó ra từ một script:
+Bạn chỉ cần mở đường link này trên trình duyệt bất kỳ (máy tính hay điện thoại đều được) là dùng được ngay, không cần tải gì về, không cần cài đặt gì. Nếu muốn dùng ngoại tuyến, bạn vẫn có thể tải file `zbs_template_studio.html` về và mở trực tiếp bằng trình duyệt — toàn bộ tính năng đều chạy được mà không cần máy chủ.
 
-```bash
-python3 build_combined.py   # tạo ra zbs_template_studio.html
-```
-
-- `build_combined.py` ghép **bộ máy kiểm duyệt đã kiểm chứng** (tokenizer JSON, bộ phục hồi dữ liệu, các quy tắc, lớp AI) với **giao diện biểu mẫu**, rồi áp các tùy chỉnh (popup hướng dẫn, giới hạn ký tự, validation, mục mẫu đã gửi…).
-- Cơ sở quy tắc: `zbs_rule_map_v2.md` (bản đồ ~75 quy tắc, đã được PO review) cùng các tài liệu định dạng tham số và quy định kiểm duyệt của ZBS.
-- Bảng màu: trắng + xanh Zalo `#0068FF`, font Inter + JetBrains Mono, theo phong cách tối giản.
+> **Về lớp AI khi dùng bản online:** lớp kiểm duyệt bằng AI chỉ kết nối được khi công cụ chạy bên trong môi trường Claude.ai. Trên bản web công khai (Vercel) hoặc khi mở file ngoại tuyến, lớp AI sẽ tự ẩn đi, còn **toàn bộ lớp kiểm tra tự động theo bộ quy tắc ZBS vẫn chạy đầy đủ** — nên mẫu của bạn vẫn được soát rất kỹ về cấu trúc, định dạng tham số, giới hạn ký tự và các quy tắc cứng.
 
 ---
 
