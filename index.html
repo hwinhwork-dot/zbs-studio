@@ -29,6 +29,9 @@
   .cc{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:10px;line-height:1;font-weight:700;color:#cbd5e1;font-family:'JetBrains Mono',ui-monospace,monospace;pointer-events:none;white-space:nowrap;}
   .cc-over{color:#f43f5e;}
   .cc-wrap{min-width:0;}
+  @keyframes shakeX{10%,90%{transform:translateX(-1px);}20%,80%{transform:translateX(2px);}30%,50%,70%{transform:translateX(-5px);}40%,60%{transform:translateX(5px);}}
+  .shake{animation:shakeX .45s cubic-bezier(.36,.07,.19,.97) both;}
+  .field-err{font-size:11px;line-height:1.3;font-weight:600;color:#f43f5e;margin-top:6px;}
   .tab-trigger{transition:all .2s ease;position:relative;}
   .tab-active{background:#0068FF;border-color:#0068FF;box-shadow:0 6px 16px -6px rgba(0,104,255,.50);}
   .tab-active div{color:#fff !important;}
@@ -134,7 +137,7 @@
 
           <!-- OA ID -->
           <div>
-            <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Mã định danh trang doanh nghiệp (OA ID)</label>
+            <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Mã định danh trang doanh nghiệp (OA ID) <span class="text-rose-500">*</span></label>
             <div class="relative">
               <input id="f-oaid" type="text" inputmode="numeric" maxlength="20" value=""
                 class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 focus:bg-white transition pr-14"
@@ -174,18 +177,12 @@
             </div>
 
             <!-- oa_info block -->
-            <div id="block-oa-info" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div id="block-oa-info" class="grid grid-cols-1 gap-3">
               <div>
-                <span class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Logo (Light mode)</span>
+                <span class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Logo <span class="text-rose-500">*</span></span>
                 <input id="f-logo-light" type="text" maxlength="200" value=""
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition"
                   placeholder="https://...">
-              </div>
-              <div>
-                <span class="text-[11px] font-semibold text-slate-500 mb-1.5 block">Logo (Dark mode)</span>
-                <input id="f-logo-dark" type="text" maxlength="200"
-                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition"
-                  placeholder="Không bắt buộc...">
               </div>
             </div>
 
@@ -2154,7 +2151,6 @@ document.addEventListener("input", function (e) {
   else if (t.id === "f-title") { S.title = t.value; refreshAll(); }
   else if (t.id === "f-body") { S.body = t.value; $("f-body-count").textContent = t.value.length + "/400 ký tự"; $("tab2-dot").classList.toggle("hidden", !t.value); refreshAll(); }
   else if (t.id === "f-logo-light") { S.logoLight = t.value; refreshAll(); }
-  else if (t.id === "f-logo-dark") { S.logoDark = t.value; refreshAll(); }
   else if (t.id === "f-map-image") { S.mapImage = t.value; refreshAll(); }
   else if (t.id === "f-ou-1") { S.ou1 = t.value; refreshAll(); }
   else if (t.id === "f-ou-2") { S.ou2 = t.value; refreshAll(); }
@@ -2184,7 +2180,7 @@ document.addEventListener("click", function (e) {
     clearFlags();
     renderScenarios(); renderTypeChips(); renderTagChips(); renderRows(); renderCtas(); syncTypeDependentBlocks();
     $("f-oaid").value = S.oaId; $("f-title").value = S.title; $("f-body").value = S.body;
-    $("f-logo-light").value = S.logoLight; $("f-logo-dark").value = S.logoDark;
+    $("f-logo-light").value = S.logoLight; if ($("f-logo-dark")) $("f-logo-dark").value = S.logoDark;
     $("f-ou-1").value = S.ou1; $("f-ou-2").value = S.ou2;
     $("f-body-count").textContent = S.body.length + "/400 ký tự";
     refreshAll();
@@ -2419,7 +2415,6 @@ function rehydrateForm() {
   $("f-title").value = S.title || "";
   $("f-body").value = S.body || "";
   $("f-logo-light").value = S.logoLight || "";
-  $("f-logo-dark").value = S.logoDark || "";
   if ($("f-map-image")) $("f-map-image").value = S.mapImage || "";
   $("f-ou-1").value = S.ou1 || "";
   $("f-ou-2").value = S.ou2 || "";
@@ -2512,6 +2507,7 @@ function resetForm() {
   S.title = ""; S.body = ""; S.mapRows = []; S.ou1 = ""; S.ou2 = ""; S.ctas = [];
   if (typeof selectedScenario !== "undefined") selectedScenario = null;
   clearFlags();
+  document.querySelectorAll('.field-err').forEach(function (e) { e.remove(); });
   rehydrateForm();
   renderScenarios();
   setStep(1); showTab(1);
@@ -2521,7 +2517,7 @@ function resetForm() {
 
 
 /* ===================== ĐẾM KÝ TỰ REALTIME (X/MAX) + KHOÁ KHI ĐẠT GIỚI HẠN ===================== */
-var CC_SEL = '#f-title,#f-ou-1,#f-ou-2,#f-logo-light,#f-logo-dark,#f-map-image,[data-rk],[data-rv],[data-cta-label],[data-cta-data]';
+var CC_SEL = '#f-title,#f-ou-1,#f-ou-2,#f-logo-light,#f-map-image,[data-rk],[data-rv],[data-cta-label],[data-cta-data]';
 function ccMax(el) { var m = parseInt(el.getAttribute('maxlength') || '0', 10); return m > 0 ? m : 0; }
 function ccUpdate(el) {
   if (!el.__cc) return;
@@ -2562,6 +2558,116 @@ document.addEventListener('click', function () { setTimeout(refreshCounters, 0);
   if (c) new MutationObserver(refreshCounters).observe(c, { childList: true });
 });
 refreshCounters();
+
+
+
+/* ===================== BẮT BUỘC NHẬP TRƯỚC KHI SANG BƯỚC KHÁC ===================== */
+function vMeta() { return TYPES.filter(function (t) { return t.id === S.type; })[0] || {}; }
+function vActiveTab() { var a = document.querySelector('.tab-trigger.tab-active'); return a ? +a.getAttribute('data-tab') : 1; }
+function rowsAllComplete() { return S.mapRows.every(function (r) { return (r.k && r.k.trim()) && (r.v && r.v.trim()); }); }
+
+function missingInTab(n) {
+  var m = vMeta(), out = [];
+  if (n === 1) {
+    if (!String(S.oaId || '').trim()) out.push({ el: $('f-oaid'), msg: 'Vui lòng nhập OA ID', scope: 'field' });
+    if (S.media === 'oa_info' && m.hasLogo && !String(S.logoLight || '').trim()) out.push({ el: $('f-logo-light'), msg: 'Vui lòng nhập link logo', scope: 'field' });
+    if (S.media === 'map_image' && m.hasMapImage && !String(S.mapImage || '').trim()) out.push({ el: $('f-map-image'), msg: 'Vui lòng nhập link ảnh', scope: 'field' });
+  } else if (n === 2) {
+    if (!String(S.title || '').trim()) out.push({ el: $('f-title'), msg: 'Vui lòng nhập tiêu đề', scope: 'field' });
+    if (!String(S.body || '').trim()) out.push({ el: $('f-body'), msg: 'Vui lòng nhập nội dung', scope: 'field' });
+    S.mapRows.forEach(function (r, i) {
+      if (!(r.k && r.k.trim())) out.push({ el: document.querySelector('[data-rk="' + i + '"]'), msg: '', scope: 'maprows' });
+      if (!(r.v && r.v.trim())) out.push({ el: document.querySelector('[data-rv="' + i + '"]'), msg: '', scope: 'maprows' });
+    });
+    if (m.hasUtility) {
+      if (!String(S.ou1 || '').trim()) out.push({ el: $('f-ou-1'), msg: 'Vui lòng nhập thông tin', scope: 'field' });
+      if (!String(S.ou2 || '').trim()) out.push({ el: $('f-ou-2'), msg: 'Vui lòng nhập thông tin', scope: 'field' });
+    }
+  } else if (n === 3) {
+    S.ctas.forEach(function (c, i) {
+      if (!(c.label && c.label.trim())) out.push({ el: document.querySelector('[data-cta-label="' + i + '"]'), msg: 'Vui lòng nhập tên nút', scope: 'cta' });
+      if (!(c.data && c.data.trim())) out.push({ el: document.querySelector('[data-cta-data="' + i + '"]'), msg: (c.kind === 'phone' ? 'Vui lòng nhập số điện thoại' : 'Vui lòng nhập link'), scope: 'cta' });
+    });
+  }
+  return out;
+}
+
+function clearVErrors() {
+  document.querySelectorAll('.field-err').forEach(function (e) { e.remove(); });
+  document.querySelectorAll('.field-flagged').forEach(function (e) { e.classList.remove('field-flagged'); });
+}
+function showVErrors(items) {
+  clearVErrors();
+  var rowMsgDone = false;
+  items.forEach(function (x) {
+    if (x.el) x.el.classList.add('field-flagged');
+    if (x.scope === 'maprows') {
+      if (!rowMsgDone) {
+        var mr = document.getElementById('map-rows');
+        var p = document.createElement('p'); p.className = 'field-err'; p.id = 'maprows-err';
+        p.textContent = 'Vui lòng điền đầy đủ thông tin hoặc xoá hàng.';
+        mr.parentNode.insertBefore(p, mr.nextSibling); rowMsgDone = true;
+      }
+    } else if (x.scope === 'cta') {
+      var card = x.el ? x.el.closest('[data-cta]') : null;
+      if (card && !card.querySelector('.field-err[data-msg="' + x.msg + '"]')) {
+        var c = document.createElement('p'); c.className = 'field-err'; c.setAttribute('data-msg', x.msg); c.textContent = x.msg; card.appendChild(c);
+      }
+    } else if (x.el) {
+      var host = x.el.closest('.cc-wrap') || x.el;
+      var pp = document.createElement('p'); pp.className = 'field-err'; pp.textContent = x.msg;
+      host.parentNode.insertBefore(pp, host.nextSibling);
+    }
+  });
+}
+function shakeBuilder(tab) {
+  var panel = document.querySelector('[data-panel="' + tab + '"]');
+  var card = panel ? panel.closest('section') : null;
+  if (!card) return;
+  card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+  setTimeout(function () { card.classList.remove('shake'); }, 520);
+}
+function gateForward(target) {
+  var cur = vActiveTab(), tabs = [];
+  if (target === 'submit') { tabs = [1, 2, 3]; }
+  else { for (var i = cur; i < target; i++) tabs.push(i); if (!tabs.length) tabs = [cur]; }
+  var firstTab = null, all = [];
+  tabs.forEach(function (tn) { var mm = missingInTab(tn); if (mm.length) { if (firstTab == null) firstTab = tn; mm.forEach(function (x) { x.tab = tn; }); all = all.concat(mm); } });
+  if (!all.length) { clearVErrors(); return true; }
+  if (firstTab !== cur) showTab(firstTab);
+  setTimeout(function () {
+    showVErrors(all);
+    shakeBuilder(firstTab);
+    var f = all.filter(function (x) { return x.tab === firstTab && x.el; })[0];
+    if (f && f.el) f.el.scrollIntoView({ block: 'center' });
+  }, firstTab !== cur ? 50 : 0);
+  return false;
+}
+/* chặn ở pha capture để chạy TRƯỚC handler điều hướng có sẵn */
+document.addEventListener('click', function (e) {
+  var sub = e.target.closest && e.target.closest('#btn-submit');
+  if (sub) { if ($('btn-submit').disabled) return; if (!gateForward('submit')) { e.stopPropagation(); e.preventDefault(); } return; }
+  var nx = e.target.closest && e.target.closest('[data-next]');
+  if (nx) { if (!gateForward(+nx.getAttribute('data-next'))) { e.stopPropagation(); e.preventDefault(); } return; }
+  var tb = e.target.closest && e.target.closest('.tab-trigger');
+  if (tb) { var tt = +tb.getAttribute('data-tab'); if (tt > vActiveTab() && !gateForward(tt)) { e.stopPropagation(); e.preventDefault(); } return; }
+}, true);
+/* xoá lỗi ngay khi user bắt đầu sửa đúng */
+document.addEventListener('input', function (e) {
+  var el = e.target;
+  if (!el || !el.classList) return;
+  if (el.hasAttribute && (el.hasAttribute('data-rk') || el.hasAttribute('data-rv'))) {
+    if (el.value.trim()) el.classList.remove('field-flagged');
+    if (rowsAllComplete()) { var mr = document.getElementById('maprows-err'); if (mr) mr.remove(); }
+    return;
+  }
+  if (el.classList.contains('field-flagged') && el.value.trim()) {
+    el.classList.remove('field-flagged');
+    var host = el.closest('.cc-wrap') || el;
+    var n = host.nextElementSibling;
+    if (n && n.classList.contains('field-err')) n.remove();
+  }
+});
 
 
 
