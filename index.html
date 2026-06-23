@@ -1613,6 +1613,23 @@ function valTooltip(v) {
     ? ("Dữ liệu tối đa " + PARAM_LIMITS[p] + " ký tự (tham số " + p + ")")
     : ("Tối đa " + VALUE_MAX + " ký tự");
 }
+/* ===== KIỂM TRA ĐỊNH DẠNG LINK (URL) & SỐ ĐIỆN THOẠI ===== */
+/* URL hợp lệ: bắt đầu https:// hoặc http://, có tên miền chứa dấu chấm + phần đuôi >= 2 ký tự,
+   cho phép đường dẫn/tham số phía sau. Cho phép biến <param> nằm trong đường dẫn. */
+var URL_RE = /^https?:\/\/([a-z0-9-]+\.)+[a-z]{2,}([\/?#][^\s]*)?$/i;
+function isValidUrl(s) {
+  s = String(s || '').trim();
+  if (!s) return false;
+  if (!/^https?:\/\//i.test(s)) return false;   // bắt buộc có scheme http/https
+  if (/\s/.test(s)) return false;               // không chứa khoảng trắng
+  return URL_RE.test(s);
+}
+function isValidPhone(s) {
+  var d = String(s || '').replace(/\D/g, '');   // chỉ giữ chữ số
+  if (/[a-zA-Z]/.test(String(s || ''))) return false; // có chữ cái -> sai (vd 1900xxxx)
+  return d.length >= 8 && d.length <= 15;
+}
+
 /* maxlength động cho ô GIÁ TRỊ + bộ đếm ký tự được xử lý ở COUNTERS_JS */
 
 
@@ -2348,16 +2365,37 @@ function extraFormChecks(acc, tag) {
     if (seen[n]) return; seen[n] = true;
     // tham số dạng số nhưng đặt tên có dấu chấm/đặc biệt — bắt bởi GEN-21/22/23 ở engine; ở đây chỉ nhắc URL
   });
+  // ===== ĐỊNH DẠNG LINK / SĐT — sai định dạng là VI PHẠM (block) =====
+  // Link logo
+  if (S.media === "oa_info" && (S.logoLight || "").trim() && !isValidUrl(S.logoLight.trim())) {
+    out.push({ ruleId: "PARAM-URL", severity: "block", title: "Link logo chưa đúng định dạng đường dẫn",
+      detail: "Logo đang dùng \"" + S.logoLight.trim() + "\" — đây không phải một đường dẫn (URL) hợp lệ.",
+      suggestion: "Hãy dán link ảnh đầy đủ, bắt đầu bằng https:// (ví dụ https://stc-oa.zdn.vn/.../logo.png)." });
+  }
+  // Link ảnh slider
+  if (S.media === "map_image" && (S.mapImage || "").trim() && !isValidUrl(S.mapImage.trim())) {
+    out.push({ ruleId: "PARAM-URL", severity: "block", title: "Link ảnh chưa đúng định dạng đường dẫn",
+      detail: "Ảnh slider đang dùng \"" + S.mapImage.trim() + "\" — đây không phải một đường dẫn (URL) hợp lệ.",
+      suggestion: "Hãy dán link ảnh đầy đủ, bắt đầu bằng https://." });
+  }
+  // Link / SĐT trên nút bấm (CTA)
   S.ctas.forEach(function (c) {
-    if (c.kind === "link" && (c.data || "").trim()) {
-      var url = c.data.trim();
-      if (!/^https?:\/\//i.test(url)) {
-        out.push({ ruleId: "PARAM-URL", severity: "warn", title: "Link CTA chưa đúng định dạng URL",
-          detail: "Nút \"" + (c.label || "") + "\" dùng link \"" + url + "\".",
-          suggestion: "Link phải bắt đầu bằng http:// hoặc https:// và độ dài tối đa 200 ký tự." });
-      } else if (url.length > 200) {
-        out.push({ ruleId: "PARAM-URL", severity: "warn", title: "Link CTA vượt quá 200 ký tự",
-          detail: "Nút \"" + (c.label || "") + "\" có link dài " + url.length + " ký tự.",
+    var data = (c.data || "").trim();
+    if (!data) return;
+    if (c.kind === "phone") {
+      if (!isValidPhone(data)) {
+        out.push({ ruleId: "PARAM-URL", severity: "block", title: "Số điện thoại trên nút bấm chưa đúng định dạng",
+          detail: "Nút \"" + (c.label || "") + "\" đang dùng \"" + data + "\".",
+          suggestion: "Nhập số điện thoại hợp lệ (chỉ gồm chữ số, từ 8 đến 15 số). Với hậu mãi (Tag 3) nên dùng tổng đài đầu số 1800/1900." });
+      }
+    } else {
+      if (!isValidUrl(data)) {
+        out.push({ ruleId: "PARAM-URL", severity: "block", title: "Link trên nút bấm chưa đúng định dạng đường dẫn",
+          detail: "Nút \"" + (c.label || "") + "\" đang dùng \"" + data + "\" — đây không phải một đường dẫn (URL) hợp lệ.",
+          suggestion: "Link phải là đường dẫn đầy đủ, bắt đầu bằng https:// (ví dụ https://ten-mien.vn/duong-dan)." });
+      } else if (data.length > 200) {
+        out.push({ ruleId: "PARAM-URL", severity: "block", title: "Link trên nút bấm vượt quá 200 ký tự",
+          detail: "Nút \"" + (c.label || "") + "\" có link dài " + data.length + " ký tự.",
           suggestion: "Rút ngắn URL (giữ link đầy đủ, không dùng dịch vụ rút gọn) xuống tối đa 200 ký tự." });
       }
     }
@@ -2570,8 +2608,14 @@ function missingInTab(n) {
   var m = vMeta(), out = [];
   if (n === 1) {
     if (!String(S.oaId || '').trim()) out.push({ el: $('f-oaid'), msg: 'Vui lòng nhập OA ID', scope: 'field' });
-    if (S.media === 'oa_info' && m.hasLogo && !String(S.logoLight || '').trim()) out.push({ el: $('f-logo-light'), msg: 'Vui lòng nhập link logo', scope: 'field' });
-    if (S.media === 'map_image' && m.hasMapImage && !String(S.mapImage || '').trim()) out.push({ el: $('f-map-image'), msg: 'Vui lòng nhập link ảnh', scope: 'field' });
+    if (S.media === 'oa_info' && m.hasLogo) {
+      if (!String(S.logoLight || '').trim()) out.push({ el: $('f-logo-light'), msg: 'Vui lòng nhập link logo', scope: 'field' });
+      else if (!isValidUrl(S.logoLight.trim())) out.push({ el: $('f-logo-light'), msg: 'Link logo chưa đúng định dạng (phải bắt đầu bằng https://)', scope: 'field' });
+    }
+    if (S.media === 'map_image' && m.hasMapImage) {
+      if (!String(S.mapImage || '').trim()) out.push({ el: $('f-map-image'), msg: 'Vui lòng nhập link ảnh', scope: 'field' });
+      else if (!isValidUrl(S.mapImage.trim())) out.push({ el: $('f-map-image'), msg: 'Link ảnh chưa đúng định dạng (phải bắt đầu bằng https://)', scope: 'field' });
+    }
   } else if (n === 2) {
     if (!String(S.title || '').trim()) out.push({ el: $('f-title'), msg: 'Vui lòng nhập tiêu đề', scope: 'field' });
     if (!String(S.body || '').trim()) out.push({ el: $('f-body'), msg: 'Vui lòng nhập nội dung', scope: 'field' });
@@ -2586,7 +2630,10 @@ function missingInTab(n) {
   } else if (n === 3) {
     S.ctas.forEach(function (c, i) {
       if (!(c.label && c.label.trim())) out.push({ el: document.querySelector('[data-cta-label="' + i + '"]'), msg: 'Vui lòng nhập tên nút', scope: 'cta' });
-      if (!(c.data && c.data.trim())) out.push({ el: document.querySelector('[data-cta-data="' + i + '"]'), msg: (c.kind === 'phone' ? 'Vui lòng nhập số điện thoại' : 'Vui lòng nhập link'), scope: 'cta' });
+      var data = (c.data || '').trim();
+      if (!data) out.push({ el: document.querySelector('[data-cta-data="' + i + '"]'), msg: (c.kind === 'phone' ? 'Vui lòng nhập số điện thoại' : 'Vui lòng nhập link'), scope: 'cta' });
+      else if (c.kind === 'phone' && !isValidPhone(data)) out.push({ el: document.querySelector('[data-cta-data="' + i + '"]'), msg: 'Số điện thoại chưa đúng định dạng (8–15 chữ số)', scope: 'cta' });
+      else if (c.kind !== 'phone' && !isValidUrl(data)) out.push({ el: document.querySelector('[data-cta-data="' + i + '"]'), msg: 'Link chưa đúng định dạng (phải bắt đầu bằng https://)', scope: 'cta' });
     });
   }
   return out;
