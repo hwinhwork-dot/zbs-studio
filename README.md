@@ -45,7 +45,7 @@ Nói cách khác, tool đứng giữa **bạn** và **bộ phận kiểm duyệt
 
 ---
 
-## 2. Sơ đồ luồng xử lý dữ liệu và quan trọng nhất: khi nào AI hỗ trợ
+## 2. Sơ đồ luồng xử lý dữ liệu 
 
 Tôi biết phần này là phần bạn quan tâm nhất, nên tôi sẽ trình bày bằng sơ đồ để bạn nhìn một cái là hiểu. Tôi tách thành ba sơ đồ: bức tranh tổng thể, thời điểm AI thực sự làm việc, và vòng đời của một mẫu tin.
 
@@ -55,20 +55,20 @@ Sơ đồ dưới đây mô tả trọn vẹn hành trình của một mẫu tin
 
 ```mermaid
 flowchart TD
-    A[" Bạn nhập thông tin<br/>(tiêu đề, nội dung, bảng, nút bấm…)"] --> B[" Tôi tự sinh JSON<br/>theo đúng schema ZBS"]
+    A[" Bạn nhập thông tin<br/>(tiêu đề, nội dung, bảng, nút bấm…)"] --> B[" Chuyển đổi thành JSON<br/>theo đúng schema ZBS"]
     B --> C[" Xem trước trên màn hình Zalo mô phỏng<br/>(cập nhật theo thời gian thực)"]
-    B --> D{" Tôi tra cứu BỘ QUY TẮC ZBS<br/>(kiểm tra tự động, chạy tức thì)"}
+    B --> D{" Tra cứu BỘ QUY TẮC ZBS<br/>"}
     D -->|"Lỗi nghiêm trọng"| E["🔴 Vi phạm — gần như chắc chắn bị từ chối"]
     D -->|"Điểm cần lưu ý"| F["🟡 Cảnh báo — nên xem lại"]
-    D -->|"Không thấy lỗi"| G["🟢 Tạm đạt"]
-    E --> H{" Lớp AI kiểm duyệt ngữ nghĩa<br/>(chạy khi bạn bấm Gửi duyệt)"}
+    D -->|"Không thấy lỗi"| G["🟢 Đạt"]
+    E --> H{" Lớp AI kiểm duyệt (chạy khi bạn bấm Gửi duyệt)"}
     F --> H
     G --> H
-    H --> I[" Tôi tổng hợp kết quả cuối:<br/>Đạt · Cần xem lại · Không đạt"]
-    I -->|"Mẫu sạch"| J[" Gửi cho CTV ZBS kiểm duyệt"]
+    H --> I[" Tổng hợp kết quả cuối:<br/>Đạt · Cần xem lại ·Vi phạm"]
+    I -->|"Mẫu sạch"|J[" CTV ZBS tiếp nhận & duyệt cuối cùng"]
     I -->|"Còn lỗi"| K[" Thu hồi & chỉnh sửa lại<br/>(ô lỗi được tô đỏ)"]
     K --> A
-    J --> L[" CTV ZBS tiếp nhận & duyệt cuối cùng"]
+ 
 ```
 
 Bạn hãy để ý: phần **tra cứu bộ quy tắc** chạy ngay lập tức và liên tục trong lúc bạn soạn, còn phần **AI** thì có một thời điểm xuất hiện rất cụ thể, tôi sẽ làm rõ ngay bên dưới.
@@ -79,17 +79,17 @@ Bạn hãy để ý: phần **tra cứu bộ quy tắc** chạy ngay lập tức
 
 ```mermaid
 flowchart TD
-    subgraph NHIP1[" NHỊP 1 — Mỗi lần bạn gõ phím (tức thì, hoạt động ngoại tuyến)"]
+    subgraph NHIP1[" NHỊP 1 — Mỗi lần bạn gõ phím "]
         direction LR
         R1["Tự sinh JSON"] --> R2["Kiểm tra định dạng tham số,<br/>giới hạn ký tự, cấu trúc"]
-        R2 --> R3["Đối chiếu các quy tắc<br/>'đếm được' của ZBS"]
+        R2 --> R3["Đối chiếu các quy tắc<br/>'giới hạn từ' của ZBS"]
     end
 
     subgraph NHIP2[" NHỊP 2 — Chỉ khi bạn bấm nút 'Gửi duyệt'"]
         direction TB
         S1["Chạy lại TOÀN BỘ kiểm tra tự động"] --> S2{"Môi trường có kết nối AI không?"}
         S2 -->|"Có (mở trong Claude.ai)"| S3[" AI ĐỌC HIỂU NGỮ NGHĨA mẫu tin:<br/>• Thiếu mã định danh giao dịch?<br/>• Văn phong mê tín / thổi phồng?<br/>• Link có ý dẫn vào nhóm/cộng đồng?<br/>• Lỗi chính tả, đánh máy?<br/>• Chủ tài khoản có khớp doanh nghiệp?"]
-        S2 -->|"Không (chạy ngoại tuyến)"| S4["Bỏ qua AI một cách an toàn,<br/>chỉ dùng kết quả tự động"]
+        S2 -->|"Không (chạy ngoài Claude)"| S4["Bỏ qua lớp AI (Như 1 CTV) ,<br/>chỉ dùng lớp kiểm tra kết quả tự động"]
         S3 --> S5["Gộp kết quả tự động + AI"]
         S4 --> S5
     end
@@ -100,18 +100,18 @@ flowchart TD
 
 - **Nhịp 1 — Lớp kiểm tra tự động (deterministic):** Lớp này chạy *âm thầm và tức thì* mỗi khi bạn thay đổi bất cứ thứ gì. Nó bắt những lỗi có thể "đo đếm" được một cách chắc chắn: số điện thoại hay đường link nằm trong nội dung, tham số viết sai định dạng, vượt quá giới hạn ký tự, thiếu tham số định danh, dùng link rút gọn hay link nhóm… Vì nó không cần internet, nên lúc nào nó cũng hoạt động.
 
-- **Nhịp 2 — Lớp AI ngữ nghĩa:** Lớp này **chỉ thức dậy đúng một thời điểm: khi bạn bấm nút "Gửi duyệt"**. Lý do là AI cần đọc và *hiểu ý nghĩa* của cả mẫu tin, việc này tốn kém hơn và không nên chạy theo từng phím gõ. AI sẽ soi những thứ mà máy móc thuần túy khó bắt: liệu nội dung có thực sự chứng minh được đã có giao dịch hay không, văn phong có mang tính mê tín/thổi phồng không, một đường link trông "bình thường" nhưng thực chất lại mời vào nhóm, hay một lỗi chính tả tinh vi như "KÍCH HỌA" lẽ ra phải là "KÍCH HOẠT".
+- **Nhịp 2 — Lớp AI :** AI ở lớp này đóng vai trò như 1 CTV sau khi được công cụ hỗ trợ kiểm tra Template trước, nghĩa rằng lớp AI **chỉ chạy: khi bạn bấm nút "Gửi duyệt"**. Lý do là AI cần đọc và *hiểu ý nghĩa* của cả mẫu tin, việc này sẽ tốn kém hơn và không nên chạy theo từng lần nhập. AI sẽ kiểm tra những thứ mà máy móc thuần túy khó bắt được: liệu nội dung có thực sự chứng minh được đã có giao dịch hay không, văn phong có mang tính mê tín/thổi phồng không, một đường link trông "bình thường" nhưng thực chất lại mời vào nhóm, hay một lỗi chính tả tinh vi như "KÍCH HỌA" lẽ ra phải là "KÍCH HOẠT".
 
-> **Một lưu ý để bạn không bỡ ngỡ:** Lớp AI chỉ kết nối được khi công cụ chạy trong môi trường Claude.ai. Nếu bạn mở file ngoại tuyến, AI sẽ tự ẩn đi và báo nhẹ nhàng, còn **toàn bộ lớp kiểm tra tự động vẫn chạy đầy đủ** nên mẫu của bạn vẫn được soát rất kỹ.
+> **Một lưu ý để bạn cần nhớ kỹ:** Lớp AI chỉ kết nối được khi công cụ chạy trong môi trường Claude.ai. Nếu bạn mở file ngoại tuyến (trên Vercel), thì AI sẽ tự ẩn đi và báo nhẹ nhàng, còn **toàn bộ lớp kiểm tra tự động vẫn chạy đầy đủ** nên mẫu của bạn vẫn được soát rất kỹ.
 
-### 2.3. Vòng đời của một mẫu tin
+### 2.3. Vòng đời của một template
 
 Cuối cùng, để bạn hình dung một mẫu tin chạy như thế nào từ lúc sinh ra đến lúc được duyệt, tôi vẽ thêm sơ đồ trạng thái này:
 
 ```mermaid
 stateDiagram-v2
     [*] --> Soan
-    Soan: Soạn (template trắng)
+    Soan: Soạn template
     KiemDuyet: Kiểm duyệt
     DaGui: Đã gửi
     CanSua: Cần sửa
@@ -121,18 +121,17 @@ stateDiagram-v2
     KiemDuyet --> CanSua: Còn cảnh báo hoặc vi phạm
     DaGui --> [*]: CTV ZBS tiếp nhận
     CanSua --> Soan: Thu hồi và chỉnh sửa lại
-    DaGui --> Soan: Xem lại mẫu đã gửi
 ```
 
 ---
 
 ## 3. Hướng dẫn sử dụng theo từng bước
 
-Tôi thiết kế công cụ theo lối từng bước, nên bạn hãy xem tuần tự là được.
+Tôi thiết kế công cụ theo waterfall, nên bạn hãy xem tuần tự là được.
 
 ### Bước 0 — Xem hướng dẫn mở màn
 
-Ngay khi bạn mở công cụ, tôi sẽ cho chạy **một popup hướng dẫn tự động** gồm bốn chặng (giới thiệu → chọn loại & mục đích → soạn nội dung → kiểm duyệt → theo dõi mẫu đã gửi). Thanh tiến trình ở trên cùng sẽ tự chạy từ xám sang xanh để bạn biết nó đang tự trình chiếu. Ở chặng cuối, tôi mời bạn **tích vào ô xác nhận đã đọc và tuân thủ nguyên tắc** rồi mới bấm "Bắt đầu sử dụng". Đây là chủ ý của tôi: tôi muốn chắc chắn bạn đã nắm luật chơi trước khi bắt đầu.
+Ngay khi bạn mở công cụ, tôi sẽ cho chạy **một popup hướng dẫn tự động** gồm bốn chặng (giới thiệu → chọn loại & mục đích → soạn nội dung → kiểm duyệt → theo dõi mẫu đã gửi). Thanh tiến trình ở trên cùng sẽ tự chạy từ xám sang xanh để bạn biết nó đang tự trình chiếu. Ở chặng cuối, tôi mời bạn **tích vào ô xác nhận đã đọc và tuân thủ nguyên tắc** rồi mới bấm "Bắt đầu sử dụng". Đây là chủ ý của tôi: tôi muốn chắc chắn bạn đã nắm luật trước khi bắt đầu.
 
 Sau khi bạn bấm bắt đầu, tôi mở ra **một template trắng** chưa có thông tin nào được điền sẵn và màn hình điện thoại bên phải hiện logo Zalo cùng lời chào, như một tờ giấy trắng đang chờ bạn.
 
