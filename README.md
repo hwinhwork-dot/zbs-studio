@@ -252,17 +252,13 @@ Ngoài ra: **Tiêu đề** tối đa 100, **Nội dung** tối đa 400, **OA ID*
 
 Hoàn toàn không. Khối JSON chỉ là phần chạy ngầm, tôi hiển thị ra để minh bạch và để kiểm tra logic. Bạn chỉ cần làm việc với biểu mẫu. Khi triển khai thật, mục JSON đó sẽ được ẩn.
 
-**Hỏi: Vì sao tôi gõ một ô mà nó không cho gõ thêm?**
-
-Vì ô đó đã chạm giới hạn ký tự theo quy định ZBS. Bạn nhìn bộ đếm ở góc phải ô (ví dụ `30/30`, hiện màu đỏ) là biết. Bạn cần rút gọn lại nội dung.
-
 **Hỏi: Kết quả "Đạt" ở đây có nghĩa là chắc chắn Zalo sẽ duyệt không?**
 
-Không hẳn. "Đạt" nghĩa là mẫu của bạn đã vượt qua các lớp kiểm tra mà tôi có thể tự động hóa. Quyết định cuối cùng vẫn thuộc về chuyên viên CTV ZBS, đặc biệt với những điều cần hồ sơ pháp lý (giấy phép, quyền sở hữu logo, ủy quyền tài khoản…). Tôi giúp bạn tối đa hóa khả năng được duyệt, chứ không thay thế Zalo.
+Không hẳn. "Đạt" nghĩa là mẫu của bạn đã vượt qua các lớp kiểm tra mà tôi có thể tự động hóa. Quyết định cuối cùng vẫn thuộc về chuyên viên CTV ZBS, đặc biệt với những điều cần hồ sơ pháp lý (giấy phép, quyền sở hữu logo, ủy quyền tài khoản…). Tôi giúp bạn tối đa hóa khả năng được duyệt, chứ không thay thế CTV của Zalo.
 
 **Hỏi: Tôi mở bản online trên Vercel mà sao không thấy AI chạy?**
 
-Đó là điều bình thường và đúng như thiết kế. Lớp AI chỉ kết nối được khi công cụ chạy trong môi trường Claude.ai; còn trên bản web công khai (Vercel) hay khi mở file ngoại tuyến, lớp AI sẽ tự ẩn. Tuy vậy, toàn bộ lớp kiểm tra tự động theo bộ quy tắc ZBS vẫn hoạt động đầy đủ, nên mẫu của bạn vẫn được soát rất kỹ về cấu trúc và các quy tắc cứng.
+Đó là điều bình thường và đúng như thiết kế. Lớp AI chỉ kết nối được khi công cụ chạy trong môi trường Claude.ai; còn trên bản web công khai (Vercel) hay khi mở file ngoại tuyến, lớp AI sẽ tự ẩn. Tuy vậy, toàn bộ lớp kiểm tra tự động theo bộ quy tắc ZBS vẫn hoạt động đầy đủ, nên mẫu của bạn vẫn được soát rất kỹ về cấu trúc và các quy tắc cứng. Hoặc bạn down file code về và chạy trong Claude code.
 
 **Hỏi: Tôi lỡ gửi một mẫu còn cảnh báo thì sao?**
 
