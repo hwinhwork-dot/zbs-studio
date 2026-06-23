@@ -108,7 +108,7 @@
             <p class="text-[11px] text-slate-400 font-medium">Khớp với hướng dẫn kiểm duyệt ZBS 2026</p>
           </div>
         </div>
-        <div class="flex items-center gap-2"><button id="btn-new-template" type="button" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#0068FF] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition active:scale-95"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/></svg>Tạo mới Template</button><span class="text-[11px] text-slate-400 font-bold bg-slate-100 px-2.5 py-1 rounded-lg hidden sm:inline" id="json-sync-badge">JSON tự cập nhật</span></div>
+        <button id="btn-new-template" type="button" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#0068FF] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition active:scale-95"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/></svg>Tạo mới Template</button>
       </div>
 
       <!-- TAB BAR -->
@@ -192,6 +192,7 @@
               <input id="f-map-image" type="text" maxlength="200"
                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition"
                 placeholder="https://... (ảnh banner trượt)">
+              <p class="text-[11px] text-slate-400 font-medium mt-1.5 leading-relaxed">Ảnh slider là dải ảnh lớn (banner) hiển thị ở đầu tin — khác với logo OA nhỏ. Mỗi mẫu chỉ dùng MỘT trong hai: Logo OA hoặc Ảnh slider. Ảnh slider chỉ áp dụng cho mẫu Tuỳ chỉnh.</p>
               
             </div>
           </div>
@@ -388,25 +389,7 @@
     </div>
   </section>
 
-  <!-- ============ LIVE JSON PANEL ============ -->
-  <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-6 animate-fade-in" style="animation-delay:220ms;">
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <svg class="w-5 h-5 zbs-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-        <div>
-          <h3 class="text-sm font-extrabold tracking-tight">Tự động chuyển sang JSON</h3>
-          <p class="text-[11px] text-slate-400 font-medium">JSON này được sinh ở backend khi bạn nhập thông tin — hiển thị ở đây chỉ để kiểm tra logic; ở bản chạy thật mục này sẽ được ẩn.</p>
-        </div>
-      </div>
-      <button id="btn-copy-json" class="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition active:scale-95">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-        <span id="copy-json-label">Sao chép</span>
-      </button>
-    </div>
-    <div class="bg-slate-950 p-5 overflow-auto max-h-[360px]">
-      <pre id="json-output" class="mono text-[11px] leading-relaxed text-slate-200 whitespace-pre"></pre>
-    </div>
-  </section>
+  
 
   <footer class="mt-8 mb-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-medium px-1">
     <span>© 2026 ZBS Product Suite • Thiết kế bởi Nguyễn Hoàng Minh.</span>
@@ -445,9 +428,18 @@
       </div>
     </div>
     <div class="px-6 pb-2 overflow-y-auto zalo-scroll flex-1">
-      <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3">Chi tiết kết quả kiểm duyệt</div>
-      <div id="results-list" class="flex flex-col gap-3 pb-2"></div>
-      <div id="results-warn-note" class="hidden mt-3 mb-2 text-[11px] text-rose-600 font-medium bg-rose-50 border border-rose-100 rounded-xl p-3 leading-relaxed"></div>
+      <div id="results-list-wrap" class="hidden">
+        <div id="results-list-head" class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3">Điểm cần xử lý</div>
+        <div id="results-list" class="flex flex-col gap-3 pb-2"></div>
+      </div>
+      <div id="results-suggest-wrap" class="hidden mt-4">
+        <div class="text-[10px] font-extrabold uppercase tracking-wider text-[#0068FF] mb-3">Gợi ý giúp tăng khả năng được duyệt (không bắt buộc)</div>
+        <div id="results-suggest" class="flex flex-col gap-3 pb-2"></div>
+      </div>
+      <div id="results-note-wrap" class="mt-4 mb-1">
+        <label id="results-note-label" for="results-note" class="block text-[11px] font-bold text-slate-600 mb-1.5">Ghi chú cho đội kiểm duyệt (không bắt buộc)</label>
+        <textarea id="results-note" rows="2" maxlength="300" placeholder="VD: Khách VIP, trường hợp đặc biệt cần đội kiểm duyệt xem xét..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition resize-none"></textarea>
+      </div>
     </div>
     <div class="px-6 py-4 border-t border-slate-100 flex gap-2.5 shrink-0">
       <button id="btn-results-back" class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl text-xs font-extrabold text-slate-700 bg-slate-100 hover:bg-slate-200 transition active:scale-[0.98]">
@@ -489,7 +481,8 @@
       <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
     </div>
     <h3 class="text-lg font-extrabold tracking-tight mb-2">Gửi kiểm duyệt thành công!</h3>
-    <p class="text-xs text-slate-500 font-medium leading-relaxed mb-6">Template của bạn đã được gửi tới bộ phận CTV kiểm duyệt thành công. Vui lòng chờ kết quả phê duyệt.</p>
+    <p class="text-xs text-slate-500 font-medium leading-relaxed mb-4">Template của bạn đã được gửi tới bộ phận CTV kiểm duyệt thành công. Vui lòng chờ kết quả phê duyệt.</p>
+    <p id="sent-note" class="hidden text-left text-[11px] text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-3 leading-relaxed mb-5"></p>
     <button id="btn-sent-ok" class="w-full bg-zbs text-white text-sm font-extrabold py-3.5 rounded-2xl hover:bg-[#0057d9] transition active:scale-[0.99]">Đã hiểu</button>
   </div>
 </div>
@@ -502,7 +495,8 @@
       <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     </div>
     <h3 class="text-base font-extrabold tracking-tight text-center mb-2">Mẫu tin đang có cảnh báo</h3>
-    <p class="text-xs text-slate-500 font-medium leading-relaxed text-center mb-6">Mẫu này đã được gửi nhưng vẫn còn điểm cần lưu ý. Bạn muốn quay về hay thu hồi để chỉnh sửa lại?</p>
+    <p class="text-xs text-slate-500 font-medium leading-relaxed text-center mb-4">Mẫu này đã được gửi nhưng vẫn còn điểm cần lưu ý. Bạn muốn quay về hay thu hồi để chỉnh sửa lại?</p>
+    <p id="recall-note" class="hidden text-left text-[11px] text-slate-600 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed mb-5"></p>
     <div class="flex flex-col gap-2.5">
       <button id="btn-recall-edit" class="w-full inline-flex items-center justify-center gap-2 bg-zbs text-white text-sm font-extrabold py-3 rounded-2xl hover:bg-[#0057d9] transition active:scale-[0.99]">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -1737,7 +1731,7 @@ function buildSections() {
 
 /* ======================= LIVE JSON PANEL ======================= */
 function refreshJson() {
-  $("json-output").textContent = JSON.stringify(buildSections(), null, 2);
+  var el = $("json-output"); if (el) el.textContent = JSON.stringify(buildSections(), null, 2);
 }
 
 /* ======================= ZALO PREVIEW (real-time) ======================= */
@@ -1752,10 +1746,10 @@ function renderPreview() {
   // logo / ảnh slider
   if (S.media === "oa_info" && m.hasLogo && S.logoLight.trim()) {
     html += '<div class="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">' +
-      '<img src="' + esc(S.logoLight.trim()) + '" alt="logo" class="h-6 object-contain" onerror="this.style.display=\'none\'">' +
-      '<span class="text-[11px] font-bold text-slate-400">OA chính thức</span></div>';
+      '<img src="' + esc(S.logoLight.trim()) + '" alt="logo" class="h-9 w-auto object-contain max-w-[120px]" onerror="this.style.display=\'none\'">' +
+      '</div>';
   } else if (S.media === "map_image" && m.hasMapImage && S.mapImage.trim()) {
-    html += '<img src="' + esc(S.mapImage.trim()) + '" alt="banner" class="w-full h-28 object-cover rounded-xl mb-3" onerror="this.style.display=\'none\'">';
+    html += '<img src="' + esc(S.mapImage.trim()) + '" alt="banner" class="w-full h-28 object-contain bg-slate-50 rounded-xl mb-3 border border-slate-100" onerror="this.style.display=\'none\'">';
   }
 
   // title
@@ -1935,7 +1929,6 @@ var SCENARIOS = [
   { name: "Cước Viễn Thông — VNTT", tone: "ok", desc: "Mẫu báo cước trả sau, đủ mã định danh, link Payment hợp lệ.",
     apply: function () {
       S.type = "payment"; S.tag = "1"; S.media = "oa_info";
-      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
       S.title = "Thông báo Cước dịch vụ viễn thông";
       S.body = "Xin trân trọng cảm ơn Quý khách <customer_name> đã tin dùng VNTT. Chúng tôi xin gửi thông báo chi tiết cước dịch vụ viễn thông đến kỳ hạn thanh toán mới nhất:";
       S.mapRows = [ {k:"Khách hàng",v:"<customer_name>"}, {k:"Mã hợp đồng",v:"<contract_number>"}, {k:"Số tiền cước",v:"<price>"}, {k:"Kỳ thanh toán",v:"Tháng <month>"} ];
@@ -1945,7 +1938,6 @@ var SCENARIOS = [
   { name: "Mã xác thực OTP — RentA", tone: "ok", desc: "Gửi mã OTP xác nhận tài khoản, bố cục tối giản, bảo mật cao.",
     apply: function () {
       S.type = "otp"; S.tag = "1"; S.media = "oa_info";
-      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
       S.title = "Mã xác thực tài khoản RentA";
       S.body = "<otp_code>";
       S.mapRows = []; S.ou1 = ""; S.ou2 = "";
@@ -1954,7 +1946,6 @@ var SCENARIOS = [
   { name: "Báo cáo Toyota", tone: "warn", desc: "Đưa SĐT trực tiếp vào nội dung thay vì nút CTA, thiếu mã giao dịch.",
     apply: function () {
       S.type = "custom"; S.tag = "2"; S.media = "oa_info";
-      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
       S.title = "Thông báo thay đổi nhân sự phụ trách";
       S.body = "Xin chào <customer_name>, Toyota Bình Dương xin thông báo nhân viên phụ trách đã ngừng công tác. Liên hệ hotline 0901234567 để được hỗ trợ.";
       S.mapRows = [ {k:"Khách hàng",v:"<customer_name>"}, {k:"Hotline",v:"0901234567"} ];
@@ -1963,7 +1954,6 @@ var SCENARIOS = [
   { name: "Báo cáo Fastie", tone: "warn", desc: "Chỉ có tên + số liệu doanh thu, thiếu mã định danh giao dịch.",
     apply: function () {
       S.type = "custom"; S.tag = "2"; S.media = "oa_info";
-      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
       S.title = "Báo cáo số liệu kinh doanh định kỳ";
       S.body = "Kính gửi Quý khách <owner_hkd>, Fastie gửi bảng tổng hợp số liệu kinh doanh tháng <month_year> từ Hộ kinh doanh <name_hkd>.";
       S.mapRows = [ {k:"Doanh thu tiền mặt",v:"<cash_rev>"}, {k:"Doanh thu chuyển khoản",v:"<bank_rev>"}, {k:"Tổng doanh thu",v:"<total_rev>"} ];
@@ -1972,7 +1962,6 @@ var SCENARIOS = [
   { name: "Khuyến mãi PJP", tone: "danger", desc: "Dùng link điều hướng nhóm/cộng đồng — vi phạm nghiêm trọng.",
     apply: function () {
       S.type = "voucher"; S.tag = "3"; S.media = "oa_info";
-      S.logoLight = "https://stc-oa.zdn.vn/uploads/renda-logo.png"; S.logoDark = "";
       S.title = "Ưu đãi thành viên PJP";
       S.body = "Chào <customer_name>, tham gia cộng đồng PJP để nhận ưu đãi độc quyền dành riêng cho thành viên!";
       S.mapRows = [ {k:"Khách hàng",v:"<customer_name>"} ];
@@ -1982,10 +1971,11 @@ var SCENARIOS = [
 ];
 var selectedScenario = null;
 function renderScenarios() {
-  var toneCls = { ok: "text-emerald-600 bg-emerald-50 border-emerald-100", warn: "text-amber-600 bg-amber-50 border-amber-100", danger: "text-rose-600 bg-rose-50 border-rose-100" };
-  var toneLabel = { ok: "Hợp lệ", warn: "Cảnh báo", danger: "Vi phạm" };
+  var toneCls = { pass: "text-emerald-600 bg-emerald-50 border-emerald-100", warn: "text-rose-600 bg-rose-50 border-rose-100" };
+  var toneLabel = { pass: "Đạt", warn: "Cảnh báo" };
   $("scenarios-grid").innerHTML = SCENARIOS.map(function (sc, i) {
     var on = selectedScenario === i;
+    var v = (typeof scenarioVerdict === "function") ? scenarioVerdict(sc) : (sc.tone === "ok" ? "pass" : "warn");
     var base = "group text-left rounded-2xl border p-3.5 transition-all cursor-pointer active:scale-[0.98] ";
     var stcls = on
       ? "border-blue-400 bg-blue-50/60 shadow-md ring-1 ring-blue-500/20 -translate-y-0.5"
@@ -1994,7 +1984,7 @@ function renderScenarios() {
     return '<button data-scenario="' + i + '" class="' + base + stcls + '">' +
       '<div class="flex items-center justify-between gap-2 mb-1.5">' +
         '<span class="' + nameCls + '">' + sc.name + '</span>' +
-        '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border shrink-0 ' + toneCls[sc.tone] + '">' + toneLabel[sc.tone] + '</span>' +
+        '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border shrink-0 ' + toneCls[v] + '">' + toneLabel[v] + '</span>' +
       '</div>' +
       '<p class="text-[10px] font-medium leading-snug ' + (on ? "text-slate-500" : "text-slate-400") + '">' + sc.desc + '</p></button>';
   }).join("");
@@ -2064,7 +2054,7 @@ function runSubmit() {
     var wait = Math.max(0, 1100 - (Date.now() - started));
     setTimeout(function () {
       closeModal("modal-reviewing");
-      setTimeout(function () { showResults(all, verdict); }, 240);
+      setTimeout(function () { showResults(all); }, 240);
     }, wait);
   }
 
@@ -2075,73 +2065,85 @@ function runSubmit() {
     runAiCheck(acc, S.tag).then(function (aiData) {
       if (done) return; done = true; clearTimeout(to);
       var av = (aiData && aiData.violations) ? aiData.violations.map(function (v) {
-        return { ruleId: v.rule_id, severity: "warn", title: v.issue, detail: v.evidence, suggestion: v.suggestion };
+        return { ruleId: v.rule_id, severity: "warn", title: v.issue, detail: v.evidence, suggestion: v.suggestion, _ai: true };
       }) : [];
       if (aiData && aiData.tag_suggested && String(aiData.tag_suggested) !== String(S.tag)) {
-        av.push({ ruleId: "TAG", severity: "warn", title: "AI đề xuất Tag " + aiData.tag_suggested + " (bạn đang khai Tag " + S.tag + ")", suggestion: "Cân nhắc đổi mục đích gửi tin cho khớp nội dung." });
+        av.push({ ruleId: "TAG", severity: "warn", title: "AI đề xuất Tag " + aiData.tag_suggested + " (bạn đang khai Tag " + S.tag + ")", suggestion: "Cân nhắc đổi mục đích gửi tin cho khớp nội dung.", _ai: true });
       }
       finish(av);
     }).catch(function () { if (done) return; done = true; clearTimeout(to); finish(null); });
   } else { finish(null); }
 }
 
-function showResults(det, verdict) {
-  var blocks = det.filter(function (v) { return v.severity === "block"; });
-  var warns = det.filter(function (v) { return v.severity === "warn" || v.severity === "weak-pass"; });
-  lastResults = { det: det, verdict: verdict, blocks: blocks, warns: warns };
+function showResults(allIssues) {
+  var cls = classifyIssues(allIssues || []);
+  var heavy = cls.heavy, suggest = cls.suggest;
+  var isWarn = heavy.length > 0;
+  lastResults = { issues: allIssues || [], heavy: heavy, suggest: suggest, isWarn: isWarn };
 
-  var headColor, iconSvg, title, sub, iconWrap;
-  if (blocks.length) {
-    headColor = "bg-rose-500"; iconWrap = "bg-white/20 text-white";
-    title = "Phát hiện điểm vi phạm"; sub = "Mẫu có lỗi cần xử lý trước khi gửi duyệt";
-    iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.5 0L3.18 16.25A2 2 0 005 19z"/></svg>';
-  } else if (warns.length) {
-    headColor = "bg-amber-500"; iconWrap = "bg-white/20 text-white";
-    title = "Cần xem lại vài điểm"; sub = "Mẫu có cảnh báo nên kiểm tra trước khi gửi";
-    iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+  var head = $("results-head"), icon = $("results-icon");
+  if (isWarn) {
+    head.className = "px-6 py-5 shrink-0 text-white bg-rose-500";
+    icon.className = "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 bg-white/20 text-white";
+    icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.5 0L3.18 16.25A2 2 0 005 19z"/></svg>';
+    $("results-title").textContent = "Mẫu còn điểm cần lưu ý";
+    $("results-sub").textContent = "Bạn vẫn có thể gửi cho CTV, nhưng nên xử lý hoặc ghi chú lý do bên dưới.";
   } else {
-    headColor = "bg-emerald-500"; iconWrap = "bg-white/20 text-white";
-    title = "Mẫu đạt sơ bộ"; sub = "Không phát hiện vi phạm ở lớp kiểm tra tự động";
-    iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+    head.className = "px-6 py-5 shrink-0 text-white bg-emerald-500";
+    icon.className = "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 bg-white/20 text-white";
+    icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+    $("results-title").textContent = "Mẫu đạt — sẵn sàng gửi duyệt";
+    $("results-sub").textContent = "Tôi không phát hiện lỗi nghiêm trọng nào trong mẫu của bạn.";
   }
-  var head = $("results-head");
-  head.className = "px-6 py-5 shrink-0 text-white " + headColor;
-  $("results-icon").className = "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 " + iconWrap;
-  $("results-icon").innerHTML = iconSvg;
-  $("results-title").textContent = title;
-  $("results-sub").textContent = sub;
 
-  var items = blocks.concat(warns);
-  if (!items.length) {
+  var listWrap = $("results-list-wrap");
+  if (heavy.length) {
+    listWrap.classList.remove("hidden");
+    $("results-list-head").textContent = "Điểm cần xử lý";
+    $("results-list").innerHTML = heavy.map(function (v) { return issueCardHtml(v, "rose", "Cần xử lý"); }).join("");
+  } else if (!suggest.length) {
+    listWrap.classList.remove("hidden");
+    $("results-list-head").textContent = "";
     $("results-list").innerHTML = '<div class="flex items-center gap-2.5 text-emerald-700 font-bold text-xs p-4 bg-emerald-50 rounded-2xl border border-emerald-100">' +
-      '<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4"/></svg>' +
-      'Mẫu tin sạch — sẵn sàng chuyển hàng đợi kiểm định ZBS.</div>';
+      '<svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4"/></svg>' +
+      'Mẫu tin sạch — sẵn sàng chuyển cho đội kiểm duyệt CTV ZBS.</div>';
   } else {
-    $("results-list").innerHTML = items.map(function (v) {
-      var isBlock = v.severity === "block";
-      var c = isBlock ? "rose" : "amber";
-      return '<div class="rounded-2xl border border-' + c + '-100 bg-' + c + '-50/50 p-4">' +
-        '<div class="flex items-start gap-2.5">' +
-          '<svg class="w-4 h-4 text-' + c + '-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" opacity="0.15"/><path d="M12 7v6m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>' +
-          '<div class="min-w-0">' +
-            '<div class="flex items-center gap-2 mb-1">' +
-              '<span title="' + esc(v.ruleId || "") + '" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-' + c + '-100 text-' + c + '-700">' + esc(friendlyRule(v.ruleId)) + '</span>' +
-              '<span class="text-[9px] font-extrabold uppercase text-' + c + '-600">' + (isBlock ? "Vi phạm" : "Cảnh báo") + '</span>' +
-            '</div>' +
-            '<div class="text-[12px] font-bold text-slate-800 leading-snug">' + esc(v.title || "") + '</div>' +
-            (v.detail ? '<div class="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">' + esc(v.detail) + '</div>' : '') +
-            (v.suggestion ? '<div class="text-[11px] zbs-blue font-semibold mt-1.5 leading-relaxed">→ ' + esc(v.suggestion) + '</div>' : '') +
-          '</div></div></div>';
-    }).join("");
+    listWrap.classList.add("hidden");
+    $("results-list").innerHTML = "";
   }
 
-  var note = $("results-warn-note");
-  if (blocks.length) {
-    note.classList.remove("hidden");
-    note.textContent = "Doanh nghiệp vẫn có thể bấm tiếp tục gửi, nhưng mẫu có tỷ lệ rất cao bị hệ thống ZBS từ chối. Khuyến nghị quay về chỉnh sửa các ô đã được tô đỏ.";
-  } else { note.classList.add("hidden"); }
+  var sgWrap = $("results-suggest-wrap");
+  if (suggest.length) {
+    sgWrap.classList.remove("hidden");
+    $("results-suggest").innerHTML = suggest.map(function (v) { return issueCardHtml(v, "blue", v._ai ? "AI gợi ý" : "Gợi ý"); }).join("");
+  } else {
+    sgWrap.classList.add("hidden");
+    $("results-suggest").innerHTML = "";
+  }
 
+  var note = $("results-note"); if (note) note.value = "";
+  var nl = $("results-note-label");
+  if (nl) nl.textContent = isWarn
+    ? "Ghi chú lý do cho đội kiểm duyệt (nên ghi nếu vẫn muốn gửi — VD khách VIP / trường hợp đặc biệt)"
+    : "Ghi chú cho đội kiểm duyệt (không bắt buộc)";
+
+  $("btn-results-continue").textContent = isWarn ? "Vẫn gửi cho CTV" : "Gửi cho CTV ZBS";
   openModal("modal-results");
+}
+
+function issueCardHtml(v, c, badge) {
+  return '<div class="rounded-2xl border border-' + c + '-100 bg-' + c + '-50/50 p-4">' +
+    '<div class="flex items-start gap-2.5">' +
+      '<svg class="w-4 h-4 text-' + c + '-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" opacity="0.15"/><path d="M12 7v6m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>' +
+      '<div class="min-w-0">' +
+        '<div class="flex items-center gap-2 mb-1 flex-wrap">' +
+          '<span title="' + esc(v.ruleId || "") + '" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-' + c + '-100 text-' + c + '-700">' + esc(friendlyRule(v.ruleId)) + '</span>' +
+          '<span class="text-[9px] font-extrabold uppercase text-' + c + '-600">' + badge + '</span>' +
+        '</div>' +
+        '<div class="text-[12px] font-bold text-slate-800 leading-snug">' + esc(v.title || "") + '</div>' +
+        (v.detail ? '<div class="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">' + esc(v.detail) + '</div>' : '') +
+        (v.suggestion ? '<div class="text-[11px] zbs-blue font-semibold mt-1.5 leading-relaxed">→ ' + esc(v.suggestion) + '</div>' : '') +
+      '</div></div></div>';
 }
 
 /* ======================= BOOT ======================= */
@@ -2164,7 +2166,7 @@ function boot() {
 /* ======================= EVENT WIRING ======================= */
 document.addEventListener("input", function (e) {
   var t = e.target;
-  if (t.id === "f-oaid") { S.oaId = t.value; refreshAll(); }
+  if (t.id === "f-oaid") { var _d = t.value.replace(/\D/g, ""); if (_d !== t.value) { t.value = _d; if ($("f-oaid-hint")) $("f-oaid-hint").classList.remove("hidden"); } else if ($("f-oaid-hint")) $("f-oaid-hint").classList.add("hidden"); S.oaId = _d; refreshAll(); }
   else if (t.id === "f-title") { S.title = t.value; refreshAll(); }
   else if (t.id === "f-body") { S.body = t.value; $("f-body-count").textContent = t.value.length + "/400 ký tự"; $("tab2-dot").classList.toggle("hidden", !t.value); refreshAll(); }
   else if (t.id === "f-logo-light") { S.logoLight = t.value; refreshAll(); }
@@ -2218,7 +2220,7 @@ document.addEventListener("click", function (e) {
   else if (t.id === "btn-results-back" || t.id === "results-backdrop") {
     closeModal("modal-results");
     setStep(1);
-    if (lastResults) flagViolatingFields(lastResults.blocks.concat(lastResults.warns));
+    if (lastResults) flagViolatingFields((lastResults && lastResults.heavy) || []);
     showTab(2);
     setTimeout(function () {
       var firstFlag = document.querySelector(".field-flagged");
@@ -2351,13 +2353,6 @@ function extraFormChecks(acc, tag) {
 
   // GEN-15 / GEN-20: logo dark mode KHÔNG bắt buộc (biểu mẫu tự fallback dark = light) -> không cảnh báo.
 
-  // GEN-40 / T1-08: cần kiểm tra chủ tài khoản nhận thanh toán
-  if (S.type === "payment" && (S.ou2 || "").trim()) {
-    out.push({ ruleId: "GEN-40", severity: "warn", title: "Cần kiểm tra chủ tài khoản nhận thanh toán",
-      detail: "Số tài khoản & tên chủ tài khoản phải đúng doanh nghiệp sở hữu OA (hoặc có văn bản ủy quyền thu hộ).",
-      suggestion: "Đảm bảo tên chủ tài khoản trùng doanh nghiệp sở hữu OA." });
-  }
-
   // PARAM: định dạng tham số theo bảng dữ liệu (URL phải http(s), tránh ký tự đặc biệt trong text)
   var params = extractParams(acc).map(function (p) { return p.name; });
   var seen = {};
@@ -2405,6 +2400,48 @@ function extraFormChecks(acc, tag) {
 }
 
 
+/* ===================== PHÂN LOẠI KẾT QUẢ: NẶNG (đỏ) vs GỢI Ý (xanh) ===================== */
+function classifyIssues(list) {
+  var heavy = [], suggest = [];
+  (list || []).forEach(function (v) {
+    var id = String(v.ruleId || ''), sev = v.severity;
+    if (v._ai) { suggest.push(v); return; }                 // AI luôn là gợi ý
+    if (/^GEN-40|^GEN-15/.test(id)) return;                 // bỏ: nhập STK là được, logo dark không bắt buộc
+    if (sev === 'weak-pass') return;                        // tín hiệu yếu -> bỏ
+    if (id === 'GEN-25' && sev !== 'block') return;         // tham số cách khoảng trắng (mơ hồ) -> bỏ
+    if (id === 'GEN-29b') { suggest.push(v); return; }      // nghi ngờ link nhóm -> gợi ý
+    if (/^TAG|^GEN-35|^T3-05|^SP-|^IND-|^GEN-11|^GEN-24/.test(id)) { suggest.push(v); return; }
+    if (sev === 'block') { heavy.push(v); return; }         // lỗi nặng -> đỏ
+    if (/T1-02|T2-02|T3-06|T1-03|T2-06/.test(id) && sev === 'warn') { heavy.push(v); return; } // thiếu/không xác định tham số -> đỏ
+    suggest.push(v);                                        // còn lại -> gợi ý (không chặn)
+  });
+  return { heavy: heavy, suggest: suggest };
+}
+
+/* Tính verdict THẬT cho 1 case mẫu (chạy thử engine, không đụng state hiện tại) -> 'pass' | 'warn' */
+function scenarioVerdict(sc) {
+  if (typeof extraFormChecks !== 'function' || typeof classifyIssues !== 'function') return sc.tone === 'ok' ? 'pass' : 'warn';
+  var saved = JSON.parse(JSON.stringify(S));
+  var res = 'pass';
+  try {
+    sc.apply();
+    var tpl = buildSections();
+    var rec = detectAndRecover(JSON.stringify(tpl));
+    var acc = normalizeTemplate(rec.sections, tpl.oa_id);
+    var det = runDeterministicChecks(acc, S.tag).concat(extraFormChecks(acc, S.tag));
+    res = classifyIssues(det).heavy.length > 0 ? 'warn' : 'pass';
+  } catch (e) {
+    res = sc.tone === 'ok' ? 'pass' : 'warn';
+  } finally {
+    Object.keys(saved).forEach(function (k) { S[k] = saved[k]; });
+  }
+  return res;
+}
+
+/* render lại badge kịch bản theo verdict thật, sau khi mọi hàm đã sẵn sàng */
+if (typeof renderScenarios === 'function') renderScenarios();
+
+
 
 /* ===================== (9) MẪU ĐÃ GỬI DUYỆT ===================== */
 var submissions = [];
@@ -2421,7 +2458,7 @@ function renderSubmissions() {
   }
   grid.innerHTML = submissions.map(function (r, i) {
     var badge = r.flagged
-      ? '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border text-amber-600 bg-amber-50 border-amber-100 shrink-0">Có cảnh báo</span>'
+      ? '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border text-rose-600 bg-rose-50 border-rose-100 shrink-0">Cảnh báo</span>'
       : '<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border text-emerald-600 bg-emerald-50 border-emerald-100 shrink-0">Đã gửi</span>';
     return '<button data-submission="' + i + '" class="group text-left rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/40 hover:shadow-md hover:-translate-y-0.5 p-3.5 transition-all active:scale-[0.98]">' +
       '<div class="flex items-center justify-between gap-2 mb-1.5">' +
@@ -2432,17 +2469,18 @@ function renderSubmissions() {
 }
 
 function saveSubmission() {
-  var blocks = (lastResults && lastResults.blocks) || [];
-  var warns = (lastResults && lastResults.warns) || [];
-  var viol = blocks.concat(warns);
+  var heavy = (lastResults && lastResults.heavy) || [];
+  var noteEl = document.getElementById('results-note');
+  var note = noteEl ? noteEl.value.trim() : '';
   var meta = TYPES.filter(function (t) { return t.id === S.type; })[0] || {};
   var tg = TAGS.filter(function (t) { return t.id === S.tag; })[0] || {};
   submissions.unshift({
     title: S.title,
     typeLabel: meta.label || S.type,
     tagLabel: tg.label || ("Tag " + S.tag),
-    flagged: viol.length > 0,
-    violations: viol,
+    flagged: heavy.length > 0,
+    violations: heavy,
+    note: note,
     snapshot: JSON.parse(JSON.stringify(S))
   });
   renderSubmissions();
@@ -2464,8 +2502,10 @@ function openSubmission(i) {
   pendingRecall = i;
   var r = submissions[i];
   if (!r) return;
-  if (!r.flagged) openModal("modal-sent");
-  else openModal("modal-recall");
+  var noteId = r.flagged ? "recall-note" : "sent-note";
+  var nEl = document.getElementById(noteId);
+  if (nEl) { if (r.note) { nEl.classList.remove("hidden"); nEl.textContent = "Ghi chú đã gửi kèm: " + r.note; } else { nEl.classList.add("hidden"); nEl.textContent = ""; } }
+  openModal(r.flagged ? "modal-recall" : "modal-sent");
 }
 
 function recallEdit() {
@@ -2765,9 +2805,9 @@ document.addEventListener('input', function (e) {
       desc: "Khi gửi, hệ thống quét JSON sinh ra theo bộ quy định ZBS và chỉ ra điểm vi phạm cùng gợi ý sửa, giúp tăng tỉ lệ duyệt.",
       visual:
         '<div class="w-full px-6 flex flex-col gap-2.5">' +
-          '<div class="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-600 border border-rose-100"><span class="w-2 h-2 rounded-full bg-rose-500"></span>KHÔNG ĐẠT</div>' +
+          '<div class="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-600 border border-rose-100"><span class="w-2 h-2 rounded-full bg-rose-500"></span>CẦN LƯU Ý</div>' +
           '<div class="rounded-xl border border-rose-100 bg-rose-50/60 p-3 text-left">' +
-            '<div class="flex items-center gap-2 mb-1"><span class="text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">GEN-26</span><span class="text-[8px] font-extrabold uppercase text-rose-600">Vi phạm</span></div>' +
+            '<div class="flex items-center gap-2 mb-1"><span class="text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">GEN-26</span><span class="text-[8px] font-extrabold uppercase text-rose-600">Cần xử lý</span></div>' +
             '<div class="text-[10px] font-bold text-slate-800 leading-snug">Phát hiện số điện thoại trong nội dung</div>' +
             '<div class="text-[9px] text-[#0068FF] font-semibold mt-1">→ Chuyển số điện thoại sang nút CTA.</div>' +
           '</div>' +
@@ -2782,7 +2822,7 @@ document.addEventListener('input', function (e) {
           '</div>' +
           '<div class="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/40 p-2.5 shadow-sm">' +
             '<span class="text-[10px] font-extrabold text-slate-800">Báo cáo Toyota</span>' +
-            '<span class="text-[8px] font-extrabold px-1.5 py-0.5 rounded-md border text-amber-600 bg-amber-50 border-amber-100">Có cảnh báo</span>' +
+            '<span class="text-[8px] font-extrabold px-1.5 py-0.5 rounded-md border text-rose-600 bg-rose-50 border-rose-100">Cảnh báo</span>' +
           '</div>' +
           '<div class="self-end inline-flex items-center gap-1 text-[9px] font-extrabold text-white bg-[#0068FF] px-2.5 py-1 rounded-lg mt-0.5">Thu hồi &amp; chỉnh sửa lại</div>' +
         '</div>' }
