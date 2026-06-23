@@ -27,20 +27,20 @@
 
 Tôi xin bắt đầu bằng câu chuyện thực tế. Khi một doanh nghiệp muốn gửi tin nhắn ZNS (Zalo Notification Service) qua nền tảng ZBS, mẫu tin đó luôn phải đi qua một vòng kiểm duyệt của Zalo. Vấn đề là rất nhiều mẫu bị **từ chối đi từ chối lại** chỉ vì những lỗi tưởng nhỏ: để số điện thoại trong nội dung thay vì đặt ở nút bấm, thiếu mã đơn hàng để chứng minh đã phát sinh giao dịch, dùng đường link dẫn vào nhóm, hay một lỗi chính tả lọt qua mắt người soạn. Mỗi lần bị từ chối là một lần chờ đợi, một lần làm lại, và một lần lỡ mất thời điểm gửi tin.
 
-**ZBS Sandbox Studio là công cụ tôi xây ra để chặn những lỗi đó ngay từ lúc bạn còn đang soạn**, thay vì để bạn phát hiện sau khi đã gửi đi và bị trả về. Bạn không cần biết JSON là gì, không cần đọc tài liệu kỹ thuật dày cộp. Bạn chỉ cần điền thông tin vào một biểu mẫu trực quan, và tôi sẽ lo phần còn lại.
+**ZBS Sandbox Studio là công cụ tôi xây ra để chặn những lỗi đó ngay từ lúc bạn còn đang soạn**, thay vì để bạn phát hiện sau khi đã gửi đi và bị trả về. Bạn không cần biết JSON là gì, chỉ cần nắm các nguyên tắc cơ bản. Bạn chỉ cần điền thông tin vào một biểu mẫu trực quan, và tools sẽ lo phần còn lại.
 
 Tôi muốn bạn ghi nhớ **mạch xương sống** của công cụ này, vì mọi thứ khác đều xoay quanh nó:
 
-> ### 🧭 Bạn nhập dữ liệu → Tôi tự sinh ra JSON → Tôi tra cứu bộ quy tắc ZBS → AI kiểm duyệt ngữ nghĩa → Mẫu được gửi cho CTV ZBS
+> ### 🧭 Bạn nhập dữ liệu → Tool tự sinh ra JSON → tự tra cứu bộ quy tắc ZBS → AI kiểm duyệt ngữ nghĩa → Mẫu được gửi cho CTV ZBS
 
-Nói cách khác, tôi đứng giữa **bạn** và **bộ phận kiểm duyệt của Zalo (CTV ZBS)**, đóng vai một người soát lỗi tận tâm: tôi đọc mẫu tin của bạn bằng đúng bộ luật mà Zalo dùng, chỉ cho bạn thấy chỗ nào chưa ổn bằng ngôn ngữ dễ hiểu, và chỉ để mẫu "đi tiếp" khi nó đã đủ sạch sẽ.
+Nói cách khác, tool đứng giữa **bạn** và **bộ phận kiểm duyệt của Zalo (CTV ZBS)**, đóng vai một người soát lỗi. Khi tool đọc mẫu tin của bạn bằng đúng bộ luật mà Zalo dùng, sẽ chỉ cho bạn thấy chỗ nào chưa ổn bằng ngôn ngữ dễ hiểu, và chỉ để mẫu đi tiếp khi nó đã đủ sạch sẽ.
 
-**Cụ thể thì tôi giúp bạn những việc sau:**
+**Cụ thể thì tool giúp bạn những việc sau:**
 
 - **Soạn mẫu mà không cần chạm vào code.** Bạn chọn loại mẫu, điền tiêu đề, nội dung, chèn các biến cá nhân hóa dạng `<ten_bien>`, thêm bảng thông tin và nút bấm, tất cả qua các ô nhập quen thuộc.
 - **Xem trước y như thật.** Mọi thứ bạn gõ hiện ngay lên một màn hình Zalo mô phỏng ở bên phải, để bạn biết khách hàng sẽ nhìn thấy gì.
 - **Tự dịch sang JSON chuẩn ZBS.** Phần JSON này chạy ngầm ở backend; tôi có hiển thị nó ra cho bạn xem chỉ nhằm mục đích kiểm tra logic, còn khi triển khai thật mục này sẽ được ẩn đi.
-- **Tự kiểm duyệt theo đúng luật.** Tôi đối chiếu mẫu của bạn với khoảng 75 quy tắc của ZBS (phân loại Tag, yêu cầu tham số định danh, quy định về logo, nút bấm, văn phong, ngành nghề đặc biệt…), cộng thêm một lớp AI đọc hiểu ngữ nghĩa.
+- **Tự kiểm duyệt theo đúng luật.** Tool đối chiếu mẫu của bạn với khoảng 75 quy tắc của ZBS (phân loại Tag, yêu cầu tham số định danh, quy định về logo, nút bấm, văn phong, ngành nghề đặc biệt…), cộng thêm một lớp AI đọc hiểu ngữ nghĩa.
 - **Quản lý các mẫu đã gửi.** Sau khi gửi, bạn có thể xem lại từng mẫu, và nếu mẫu nào còn cảnh báo thì thu hồi để chỉnh sửa, với đúng những ô bị lỗi được tô đỏ.
 
 ---
@@ -97,8 +97,6 @@ flowchart TD
     NHIP1 -->|"Bạn soạn xong và bấm Gửi duyệt"| NHIP2
     S5 --> OUT[" Hiển thị kết quả kiểm duyệt cho bạn"]
 ```
-
-Tôi giải thích bằng lời cho thật rõ:
 
 - **Nhịp 1 — Lớp kiểm tra tự động (deterministic):** Lớp này chạy *âm thầm và tức thì* mỗi khi bạn thay đổi bất cứ thứ gì. Nó bắt những lỗi có thể "đo đếm" được một cách chắc chắn: số điện thoại hay đường link nằm trong nội dung, tham số viết sai định dạng, vượt quá giới hạn ký tự, thiếu tham số định danh, dùng link rút gọn hay link nhóm… Vì nó không cần internet, nên lúc nào nó cũng hoạt động.
 
